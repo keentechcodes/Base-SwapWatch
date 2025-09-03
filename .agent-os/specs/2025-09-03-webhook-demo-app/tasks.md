@@ -10,13 +10,13 @@
   - [x] 1.5 Add request logging middleware
   - [x] 1.6 Verify all tests pass
 
-- [ ] 2. Implement webhook receiver endpoint
-  - [ ] 2.1 Write tests for webhook endpoint and payload handling
-  - [ ] 2.2 Create POST /webhook endpoint with JSON body parsing
-  - [ ] 2.3 Implement raw body capture for signature verification
-  - [ ] 2.4 Add request validation and error handling
-  - [ ] 2.5 Create webhook event logger with formatted output
-  - [ ] 2.6 Verify all tests pass
+- [x] 2. Implement webhook receiver endpoint
+  - [x] 2.1 Write tests for webhook endpoint and payload handling
+  - [x] 2.2 Create POST /webhook endpoint with JSON body parsing
+  - [x] 2.3 Implement raw body capture for signature verification
+  - [x] 2.4 Add request validation and error handling
+  - [x] 2.5 Create webhook event logger with formatted output
+  - [x] 2.6 Verify all tests pass
 
 - [ ] 3. Add webhook signature verification
   - [ ] 3.1 Write tests for HMAC signature validation
