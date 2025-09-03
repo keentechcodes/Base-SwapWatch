@@ -1,0 +1,3 @@
+# Spec Summary (Lite)
+
+Build a minimal webhook receiver application to test core Coinbase Developer Platform webhook functionality for monitoring wallet swap transactions. This demo validates webhook integration with signature verification and basic event processing using ngrok for local development tunneling, providing console-based swap event logging without requiring database storage or complex UI.
