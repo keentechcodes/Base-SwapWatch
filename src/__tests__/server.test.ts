@@ -1,10 +1,7 @@
 import request from 'supertest';
-import { app, server } from '../server';
+import { app } from '../server';
 
 describe('Express Server', () => {
-  afterAll((done) => {
-    server.close(done);
-  });
 
   describe('GET /', () => {
     it('should return service information', async () => {

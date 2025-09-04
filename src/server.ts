@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
 import chalk from 'chalk';
 import { WebhookRequest, captureRawBody, verifyWebhookSignature, validateWebhookPayload } from './middleware/webhookAuth';
+// import { debugWebhookSignature } from './middleware/webhookAuthDebug'; // Fixed - CDP uses direct secret
 import { EventLogger } from './utils/eventLogger';
 import { WebhookEvent, WebhookResponse } from './types/webhook';
 
@@ -81,7 +82,7 @@ app.post('/webhook',
       });
     }
   },
-  verifyWebhookSignature,
+  verifyWebhookSignature, // Fixed to handle CDP's direct secret format
   validateWebhookPayload,
   (req: Request, res: Response) => {
     try {
@@ -128,16 +129,22 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   });
 });
 
-// Start server
+// Start server only if not in test environment
 const PORT = process.env.PORT || 3000;
-export const server = app.listen(PORT, () => {
-  console.log(chalk.green.bold(`🚀 SwapWatch Webhook Demo Server`));
-  console.log(chalk.blue(`📡 Listening on port ${PORT}`));
-  console.log(chalk.yellow(`🔗 http://localhost:${PORT}`));
-  console.log(chalk.cyan(`🏥 Health check: http://localhost:${PORT}/health`));
-  
-  if (!process.env.WEBHOOK_SECRET) {
-    console.log(chalk.yellow.bold('\n⚠️  Warning: WEBHOOK_SECRET not configured'));
-    console.log(chalk.yellow('   Please set WEBHOOK_SECRET in your .env file'));
-  }
-});
+let server: any;
+
+if (process.env.NODE_ENV !== 'test') {
+  server = app.listen(PORT, () => {
+    console.log(chalk.green.bold(`🚀 SwapWatch Webhook Demo Server`));
+    console.log(chalk.blue(`📡 Listening on port ${PORT}`));
+    console.log(chalk.yellow(`🔗 http://localhost:${PORT}`));
+    console.log(chalk.cyan(`🏥 Health check: http://localhost:${PORT}/health`));
+    
+    if (!process.env.WEBHOOK_SECRET) {
+      console.log(chalk.yellow.bold('\n⚠️  Warning: WEBHOOK_SECRET not configured'));
+      console.log(chalk.yellow('   Please set WEBHOOK_SECRET in your .env file'));
+    }
+  });
+}
+
+export { server };

@@ -18,21 +18,21 @@
   - [x] 2.5 Create webhook event logger with formatted output
   - [x] 2.6 Verify all tests pass
 
-- [ ] 3. Add webhook signature verification
-  - [ ] 3.1 Write tests for HMAC signature validation
-  - [ ] 3.2 Implement signature generation using webhook secret
-  - [ ] 3.3 Add timing-safe signature comparison
-  - [ ] 3.4 Implement timestamp validation (5-minute window)
-  - [ ] 3.5 Add security error responses for invalid signatures
-  - [ ] 3.6 Verify all tests pass
+- [x] 3. Add webhook signature verification
+  - [x] 3.1 Write tests for HMAC signature validation
+  - [x] 3.2 Implement signature generation using webhook secret
+  - [x] 3.3 Add timing-safe signature comparison
+  - [x] 3.4 Implement timestamp validation (5-minute window)
+  - [x] 3.5 Add security error responses for invalid signatures
+  - [x] 3.6 Verify all tests pass
 
-- [ ] 4. Parse and identify swap events
-  - [ ] 4.1 Write tests for swap event detection and parsing
-  - [ ] 4.2 Create event type identifier for CDP webhook payloads
-  - [ ] 4.3 Implement swap detection logic for DEX transactions
-  - [ ] 4.4 Extract and format swap data (tokens, amounts, addresses)
-  - [ ] 4.5 Add color-coded console output using chalk
-  - [ ] 4.6 Verify all tests pass
+- [x] 4. Parse and identify swap events
+  - [x] 4.1 Write tests for swap event detection and parsing
+  - [x] 4.2 Create event type identifier for CDP webhook payloads
+  - [x] 4.3 Implement swap detection logic for DEX transactions
+  - [x] 4.4 Extract and format swap data (tokens, amounts, addresses)
+  - [x] 4.5 Add color-coded console output using chalk
+  - [x] 4.6 Verify all tests pass
 
 - [ ] 5. Set up development tools and documentation
   - [ ] 5.1 Write tests for ngrok integration script

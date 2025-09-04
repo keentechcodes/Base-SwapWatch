@@ -1,5 +1,6 @@
 import chalk from 'chalk';
-import { WebhookEvent, EventType, KNOWN_DEX_ROUTERS } from '../types/webhook';
+import { WebhookEvent, EventType } from '../types/webhook';
+import { identifySwapEvent, extractSwapData, formatSwapEvent } from './swapDetector';
 
 export class EventLogger {
   private static getEventColor(eventType: EventType): any {
@@ -43,40 +44,21 @@ export class EventLogger {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   }
 
-  private static detectSwap(event: WebhookEvent): boolean {
-    // Check if it's a swap by looking at known DEX router contracts
-    if (event.contractAddress && KNOWN_DEX_ROUTERS[event.contractAddress.toLowerCase()]) {
-      return true;
-    }
-
-    // Check if it's a smart contract event with swap-related function
-    if (event.eventType === 'smart_contract_event' && event.func) {
-      const swapFunctions = ['swap', 'swapExact', 'swapTokens', 'exchange'];
-      return swapFunctions.some(f => event.func!.toLowerCase().includes(f.toLowerCase()));
-    }
-
-    return false;
-  }
 
   public static logEvent(event: WebhookEvent): void {
     const color = this.getEventColor(event.eventType as EventType);
     const timestamp = new Date().toISOString();
-    const isSwap = this.detectSwap(event);
+    const isSwap = identifySwapEvent(event);
+    const swapData = extractSwapData(event);
 
     console.log('\n' + chalk.gray('━'.repeat(80)));
     console.log(chalk.bold.white(`📨 Webhook Event Received`));
     console.log(chalk.gray(`Time: ${timestamp}`));
     console.log(chalk.gray('━'.repeat(80)));
 
-    // Event header with swap detection
-    if (isSwap) {
-      console.log(chalk.bold.green('🔄 SWAP DETECTED!'));
-      if (event.contractAddress) {
-        const dexName = KNOWN_DEX_ROUTERS[event.contractAddress.toLowerCase()];
-        if (dexName) {
-          console.log(chalk.green(`   DEX: ${dexName}`));
-        }
-      }
+    // Event header with enhanced swap detection
+    if (isSwap && swapData) {
+      formatSwapEvent(swapData);
     }
 
     // Event type and network

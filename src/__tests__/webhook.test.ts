@@ -1,11 +1,8 @@
 import request from 'supertest';
 import crypto from 'crypto';
-import { app, server } from '../server';
+import { app } from '../server';
 
 describe('Webhook Endpoint', () => {
-  afterAll((done) => {
-    server.close(done);
-  });
 
   const mockWebhookPayload = {
     webhookId: '66bd79d0b9c200eae1a43165',

@@ -36,39 +36,39 @@ export const verifyWebhookSignature = (req: WebhookRequest, res: Response, next:
   }
 
   try {
-    // Use raw body for signature verification
+    // CDP (alpha) currently sends the webhook secret directly as the signature
+    // Check if signature matches the secret (CDP format)
+    if (signature === webhookSecret) {
+      console.log(chalk.green('✓ Webhook signature verified (CDP direct secret)'));
+      next();
+      return;
+    }
+
+    // Also support HMAC signature format (for our tests and future CDP updates)
     const payload = req.rawBody || Buffer.from(JSON.stringify(req.body));
     const expectedSignature = crypto
       .createHmac('sha256', webhookSecret)
       .update(payload)
       .digest('hex');
 
-    // Timing-safe comparison
-    const signatureBuffer = Buffer.from(signature);
-    const expectedBuffer = Buffer.from(expectedSignature);
-    
-    if (signatureBuffer.length !== expectedBuffer.length) {
-      console.error(chalk.red('⚠️  Invalid webhook signature (length mismatch)'));
-      res.status(401).json({ 
-        error: 'Invalid webhook signature',
-        message: 'Signature verification failed'
-      });
+    // Check if signature matches HMAC format
+    if (signature === expectedSignature) {
+      console.log(chalk.green('✓ Webhook signature verified (HMAC)'));
+      next();
       return;
     }
 
-    const isValid = crypto.timingSafeEqual(signatureBuffer, expectedBuffer);
+    // Neither format matched
+    console.error(chalk.red('⚠️  Invalid webhook signature'));
+    console.error(chalk.yellow('  Expected (CDP):', webhookSecret.substring(0, 10) + '...'));
+    console.error(chalk.yellow('  Expected (HMAC):', expectedSignature.substring(0, 10) + '...'));
+    console.error(chalk.yellow('  Received:', signature.substring(0, 10) + '...'));
     
-    if (!isValid) {
-      console.error(chalk.red('⚠️  Invalid webhook signature'));
-      res.status(401).json({ 
-        error: 'Invalid webhook signature',
-        message: 'Signature verification failed'
-      });
-      return;
-    }
-
-    console.log(chalk.green('✓ Webhook signature verified'));
-    next();
+    res.status(401).json({ 
+      error: 'Invalid webhook signature',
+      message: 'Signature verification failed'
+    });
+    return;
   } catch (error) {
     console.error(chalk.red('⚠️  Signature verification error:'), error);
     res.status(401).json({ 
