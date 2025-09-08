@@ -12,7 +12,8 @@
     "test:coverage": "jest --coverage",
     "clean": "rm -rf dist coverage",
     "typecheck": "tsc --noEmit",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "validate-apis": "node scripts/validate-apis.js"
   },
   "keywords": [],
   "author": "",
