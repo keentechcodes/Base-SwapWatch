@@ -1,6 +1,10 @@
 import express, { Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
 import chalk from 'chalk';
+import { WebhookRequest, captureRawBody, verifyWebhookSignature, validateWebhookPayload } from './middleware/webhookAuth';
+// import { debugWebhookSignature } from './middleware/webhookAuthDebug'; // Fixed - CDP uses direct secret
+import { EventLogger } from './utils/eventLogger';
+import { WebhookEvent, WebhookResponse } from './types/webhook';
 
 // Load environment variables
 dotenv.config();
@@ -11,7 +15,14 @@ export const app = express();
 // Track server start time for uptime calculation
 const startTime = Date.now();
 
-// Middleware
+// Middleware for non-webhook routes
+app.use('/webhook', express.raw({ 
+  type: 'application/json',
+  limit: '10mb',
+  verify: captureRawBody
+}));
+
+// Middleware for other routes
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -54,6 +65,51 @@ app.get('/health', (_req: Request, res: Response) => {
   });
 });
 
+// Webhook endpoint
+app.post('/webhook', 
+  (req: WebhookRequest, res: Response, next: NextFunction) => {
+    try {
+      // Parse the raw body as JSON for processing
+      if (req.body && Buffer.isBuffer(req.body)) {
+        req.body = JSON.parse(req.body.toString());
+      }
+      next();
+    } catch (error) {
+      EventLogger.logError('Failed to parse webhook body', error);
+      res.status(400).json({
+        error: 'Invalid JSON payload',
+        message: 'Unable to parse webhook body'
+      });
+    }
+  },
+  verifyWebhookSignature, // Fixed to handle CDP's direct secret format
+  validateWebhookPayload,
+  (req: Request, res: Response) => {
+    try {
+      const event = req.body as WebhookEvent;
+      
+      // Log the event with formatted output
+      EventLogger.logEvent(event);
+
+      // Prepare response
+      const response: WebhookResponse = {
+        status: 'received',
+        eventType: event.eventType,
+        timestamp: new Date().toISOString()
+      };
+
+      // Send success response
+      res.status(200).json(response);
+    } catch (error) {
+      EventLogger.logError('Error processing webhook', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: 'Failed to process webhook'
+      });
+    }
+  }
+);
+
 // 404 handler
 app.use((req: Request, res: Response) => {
   res.status(404).json({
@@ -73,16 +129,22 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   });
 });
 
-// Start server
+// Start server only if not in test environment
 const PORT = process.env.PORT || 3000;
-export const server = app.listen(PORT, () => {
-  console.log(chalk.green.bold(`🚀 SwapWatch Webhook Demo Server`));
-  console.log(chalk.blue(`📡 Listening on port ${PORT}`));
-  console.log(chalk.yellow(`🔗 http://localhost:${PORT}`));
-  console.log(chalk.cyan(`🏥 Health check: http://localhost:${PORT}/health`));
-  
-  if (!process.env.WEBHOOK_SECRET) {
-    console.log(chalk.yellow.bold('\n⚠️  Warning: WEBHOOK_SECRET not configured'));
-    console.log(chalk.yellow('   Please set WEBHOOK_SECRET in your .env file'));
-  }
-});
+let server: any;
+
+if (process.env.NODE_ENV !== 'test') {
+  server = app.listen(PORT, () => {
+    console.log(chalk.green.bold(`🚀 SwapWatch Webhook Demo Server`));
+    console.log(chalk.blue(`📡 Listening on port ${PORT}`));
+    console.log(chalk.yellow(`🔗 http://localhost:${PORT}`));
+    console.log(chalk.cyan(`🏥 Health check: http://localhost:${PORT}/health`));
+    
+    if (!process.env.WEBHOOK_SECRET) {
+      console.log(chalk.yellow.bold('\n⚠️  Warning: WEBHOOK_SECRET not configured'));
+      console.log(chalk.yellow('   Please set WEBHOOK_SECRET in your .env file'));
+    }
+  });
+}
+
+export { server };
