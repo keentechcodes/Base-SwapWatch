@@ -14,7 +14,7 @@ echo "Signature: $SIGNATURE"
 echo "Sending webhook..."
 
 # Send the webhook
-curl -X POST https://concentrations-dean-implies-td.trycloudflare.com/webhook \
+curl -X POST https://discussion-module-auditor-unity.trycloudflare.com/webhook \
   -H "Content-Type: application/json" \
   -H "x-webhook-signature: $SIGNATURE" \
   -d "$PAYLOAD"

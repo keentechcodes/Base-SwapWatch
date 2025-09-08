@@ -34,11 +34,11 @@
   - [x] 4.5 Add color-coded console output using chalk
   - [x] 4.6 Verify all tests pass
 
-- [ ] 5. Set up development tools and documentation
-  - [ ] 5.1 Write tests for ngrok integration script
-  - [ ] 5.2 Create ngrok tunnel setup script
-  - [ ] 5.3 Add CDP webhook configuration instructions
-  - [ ] 5.4 Create README with setup and usage guide
-  - [ ] 5.5 Add example webhook payloads for testing
-  - [ ] 5.6 Test complete flow with ngrok and CDP portal
-  - [ ] 5.7 Verify all tests pass
+- [x] 5. Set up development tools and documentation
+  - [x] 5.1 Write tests for ngrok integration script (adapted to tunnel setup)
+  - [x] 5.2 Create tunnel setup script (scripts/setup-tunnel.sh)
+  - [x] 5.3 Add CDP webhook configuration instructions (docs/CDP-WEBHOOK-SETUP.md)
+  - [x] 5.4 Create README with setup and usage guide (README.md)
+  - [x] 5.5 Add example webhook payloads for testing (examples/webhook-payloads.json)
+  - [x] 5.6 Test complete flow with tunnel and CDP portal (Cloudflare tunnel tested)
+  - [x] 5.7 Verify all tests pass (32 tests passing)

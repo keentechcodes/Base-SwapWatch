@@ -19,29 +19,52 @@ export class EventLogger {
       case 'wallet_activity':
         return chalk.white;
       default:
-        return chalk.gray;
+        return chalk.cyan;
     }
   }
 
-  private static formatValue(value: string | number | undefined): string {
+  private static formatValue(value: string | number | undefined, decimals: number = 18): string {
     if (!value) return 'N/A';
     
     const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    const actualValue = numValue / Math.pow(10, decimals);
     
-    if (numValue > 1e9) {
-      return `${(numValue / 1e9).toFixed(4)} B`;
-    } else if (numValue > 1e6) {
-      return `${(numValue / 1e6).toFixed(4)} M`;
-    } else if (numValue > 1e3) {
-      return `${(numValue / 1e3).toFixed(4)} K`;
+    if (actualValue > 1e9) {
+      return `${(actualValue / 1e9).toFixed(4)} B`;
+    } else if (actualValue > 1e6) {
+      return `${(actualValue / 1e6).toFixed(4)} M`;
+    } else if (actualValue > 1e3) {
+      return `${(actualValue / 1e3).toFixed(4)} K`;
+    } else if (actualValue < 0.0001 && actualValue > 0) {
+      return actualValue.toExponential(4);
     }
     
-    return numValue.toString();
+    return actualValue.toFixed(6);
   }
 
-  private static formatAddress(address: string | undefined): string {
+  private static getTokenDecimals(contractAddress: string | undefined): number {
+    if (!contractAddress) return 18;
+    
+    // Common Base tokens and their decimals
+    const tokenDecimals: Record<string, number> = {
+      '0x833589fcd6edb6e08f4c7c32d4f71b54bda02913': 6,  // USDC
+      '0x50c5725949a6f0c72e6c4a641f24049a917db0cb': 18, // DAI  
+      '0x4200000000000000000000000000000000000006': 18, // WETH
+      '0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca': 6,  // USDbC
+      '0x2ae3f1ec7f1f5012cfeab0185bfc7aa3cf0dec22': 18, // cbETH
+      '0x4ed4e862860bed51a9570b96d89af5e1b0efefed': 18, // DEGEN
+      '0x940181a94a35a4569e4529a3cdfb74e38fd98631': 18, // AERO
+    };
+    
+    return tokenDecimals[contractAddress.toLowerCase()] || 18;
+  }
+
+  private static formatAddress(address: string | undefined, shorten: boolean = false): string {
     if (!address) return 'N/A';
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+    if (shorten) {
+      return `${address.slice(0, 6)}...${address.slice(-4)}`;
+    }
+    return address;
   }
 
 
@@ -51,10 +74,10 @@ export class EventLogger {
     const isSwap = identifySwapEvent(event);
     const swapData = extractSwapData(event);
 
-    console.log('\n' + chalk.gray('━'.repeat(80)));
+    console.log('\n' + chalk.cyan('━'.repeat(80)));
     console.log(chalk.bold.white(`📨 Webhook Event Received`));
-    console.log(chalk.gray(`Time: ${timestamp}`));
-    console.log(chalk.gray('━'.repeat(80)));
+    console.log(chalk.cyan(`Time: ${timestamp}`));
+    console.log(chalk.cyan('━'.repeat(80)));
 
     // Event header with enhanced swap detection
     if (isSwap && swapData) {
@@ -63,36 +86,39 @@ export class EventLogger {
 
     // Event type and network
     console.log(color.bold(`Event Type: ${event.eventType}`));
-    console.log(chalk.gray(`Network: ${event.network || 'unknown'}`));
-    console.log(chalk.gray(`Webhook ID: ${event.webhookId}`));
+    console.log(chalk.cyan(`Network: ${event.network || 'unknown'}`));
+    console.log(chalk.cyan(`Webhook ID: ${event.webhookId}`));
 
-    // Transaction details
+    // Transaction details with BaseScan link
     if (event.transactionHash) {
-      console.log(chalk.blue(`Transaction: ${event.transactionHash}`));
+      const baseScanUrl = `https://basescan.org/tx/${event.transactionHash}`;
+      console.log(chalk.blue(`Transaction:`));
+      console.log(chalk.cyan.underline(baseScanUrl));
     }
     
     if (event.blockNumber) {
-      console.log(chalk.gray(`Block: ${event.blockNumber} | Time: ${event.blockTime || 'N/A'}`));
+      console.log(chalk.cyan(`Block: ${event.blockNumber} | Time: ${event.blockTime || 'N/A'}`));
     }
 
     // Transfer details
     if (event.from || event.to) {
       console.log('\n' + chalk.bold('Transfer Details:'));
       if (event.from) {
-        console.log(`  From: ${this.formatAddress(event.from)}`);
+        console.log(`  From: ${chalk.cyan(event.from)}`);
       }
       if (event.to) {
-        console.log(`  To:   ${this.formatAddress(event.to)}`);
+        console.log(`  To:   ${chalk.cyan(event.to)}`);
       }
       if (event.value !== undefined) {
-        console.log(`  Value: ${color.bold(this.formatValue(event.value))}`);
+        const decimals = this.getTokenDecimals(event.contractAddress);
+        console.log(`  Value: ${color.bold(this.formatValue(event.value, decimals))}`);
       }
     }
 
     // Contract details
     if (event.contractAddress) {
       console.log('\n' + chalk.bold('Contract:'));
-      console.log(`  Address: ${this.formatAddress(event.contractAddress)}`);
+      console.log(`  Address: ${chalk.cyan(event.contractAddress)}`);
       if (event.func) {
         console.log(`  Function: ${event.func}`);
       }
@@ -121,16 +147,16 @@ export class EventLogger {
     }
 
     if (event.walletId) {
-      console.log(chalk.gray(`Wallet ID: ${event.walletId}`));
+      console.log(chalk.cyan(`Wallet ID: ${event.walletId}`));
     }
 
-    console.log(chalk.gray('━'.repeat(80)) + '\n');
+    console.log(chalk.cyan('━'.repeat(80)) + '\n');
 
     // Log raw event in debug mode
     if (process.env.LOG_LEVEL === 'debug') {
-      console.log(chalk.gray('Raw Event Data:'));
-      console.log(chalk.gray(JSON.stringify(event, null, 2)));
-      console.log(chalk.gray('━'.repeat(80)) + '\n');
+      console.log(chalk.cyan('Raw Event Data:'));
+      console.log(chalk.cyan(JSON.stringify(event, null, 2)));
+      console.log(chalk.cyan('━'.repeat(80)) + '\n');
     }
   }
 
@@ -139,7 +165,7 @@ export class EventLogger {
     if (error) {
       console.error(chalk.red(error.stack || error));
     }
-    console.error(chalk.gray('━'.repeat(80)) + '\n');
+    console.error(chalk.cyan('━'.repeat(80)) + '\n');
   }
 
   public static logInfo(message: string, data?: any): void {

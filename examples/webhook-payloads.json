@@ -1,0 +1,124 @@
+{
+  "erc20_transfer": {
+    "webhookId": "66bd79d0b9c200eae1a43165",
+    "eventType": "erc20_transfer",
+    "network": "base-mainnet",
+    "blockHash": "0x60036a0f0454582f60cab6f98990cdcca519b87dd63d5ec01724ce2337129abc",
+    "blockNumber": "18452087",
+    "blockTime": "2024-08-15T03:45:21.000Z",
+    "transactionHash": "0x7f7bc473ee2b94792f033f4d12d0d4d057dab0b5b4f32cd058ad95ee652af948",
+    "transactionIndex": "16",
+    "logIndex": "46",
+    "contractAddress": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "from": "0xbb8b2da5db110ad625270061e81987ce342677c3",
+    "to": "0xfb2139331532e3ee59777fbbcb14af674f3fd671",
+    "value": "46737096"
+  },
+  
+  "swap_uniswap_v3": {
+    "webhookId": "swap-001",
+    "eventType": "smart_contract_event",
+    "network": "base-mainnet",
+    "from": "0x1234567890123456789012345678901234567890",
+    "to": "0x2626664c2603336E57B271c5C0b26F421741e481",
+    "contractAddress": "0x2626664c2603336E57B271c5C0b26F421741e481",
+    "methodName": "swapExactTokensForTokens",
+    "transactionHash": "0xabc1234567890def1234567890abcdef1234567890abcdef1234567890abcdef",
+    "value": "1000000000000000000",
+    "data": {
+      "tokenIn": "0x4200000000000000000000000000000000000006",
+      "tokenOut": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountIn": "1000000000000000000",
+      "amountOut": "2500000000"
+    }
+  },
+  
+  "swap_baseswap": {
+    "webhookId": "swap-002",
+    "eventType": "smart_contract_event",
+    "network": "base-mainnet",
+    "from": "0xuser123",
+    "to": "0x327Df1E6de05895d2ab08513aaDD9313Fe505d86",
+    "contractAddress": "0x327Df1E6de05895d2ab08513aaDD9313Fe505d86",
+    "methodName": "swap",
+    "transactionHash": "0xdef456",
+    "value": "500000000000000000"
+  },
+  
+  "swap_aerodrome": {
+    "webhookId": "swap-003",
+    "eventType": "smart_contract_event",
+    "network": "base-mainnet",
+    "from": "0xtrader456",
+    "to": "0xcF77a3Ba9A5CA399B7c97c74d54e5b1Beb874E43",
+    "contractAddress": "0xcF77a3Ba9A5CA399B7c97c74d54e5b1Beb874E43",
+    "methodName": "swapExactETHForTokens",
+    "transactionHash": "0xghi789",
+    "value": "2000000000000000000",
+    "data": {
+      "tokenOut": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "amountOutMin": "5000000000"
+    }
+  },
+  
+  "wallet_activity": {
+    "webhookId": "wallet-001",
+    "eventType": "wallet_activity",
+    "network": "base-mainnet",
+    "addresses": [
+      "0x1234567890123456789012345678901234567890",
+      "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+    ],
+    "walletId": "wallet-123"
+  },
+  
+  "transaction": {
+    "webhookId": "tx-001",
+    "eventType": "transaction",
+    "network": "base-mainnet",
+    "blockHash": "0x123abc",
+    "blockNumber": "19000000",
+    "blockTime": "2024-09-04T12:00:00.000Z",
+    "transactionHash": "0x614ce31381cc1b3caf684933619e46cd50168278accd8e25879da3c666c0c705",
+    "from": "0xsender123",
+    "to": "0xrecipient456",
+    "value": "100000000000000000"
+  },
+  
+  "erc721_transfer": {
+    "webhookId": "nft-001",
+    "eventType": "erc721_transfer",
+    "network": "base-mainnet",
+    "contractAddress": "0xnftContract123",
+    "from": "0xseller123",
+    "to": "0xbuyer456",
+    "tokenId": "42",
+    "transactionHash": "0xnft123"
+  },
+  
+  "erc1155_transfer_single": {
+    "webhookId": "multi-001",
+    "eventType": "erc1155_transfer_single",
+    "network": "base-mainnet",
+    "contractAddress": "0xmultiToken123",
+    "from": "0xsender",
+    "to": "0xreceiver",
+    "operator": "0xoperator",
+    "id": 1,
+    "value": 10,
+    "transactionHash": "0xmulti123"
+  },
+  
+  "erc1155_transfer_batch": {
+    "webhookId": "batch-001",
+    "eventType": "erc1155_transfer_batch",
+    "network": "base-mainnet",
+    "contractAddress": "0xbatchToken123",
+    "from": "0xsender",
+    "to": "0xreceiver",
+    "operator": "0xoperator",
+    "ids": [1, 2, 3],
+    "values": [10, 20, 30],
+    "transactionHash": "0xbatch123"
+  }
+}
