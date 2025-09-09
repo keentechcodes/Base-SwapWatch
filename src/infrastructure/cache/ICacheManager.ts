@@ -91,3 +91,15 @@ export interface CacheConfig {
   retryDelay?: number;
   enableOfflineQueue?: boolean;
 }
+
+export interface RequiredCacheConfig extends CacheConfig {
+  host: string;
+  port: number;
+  password: string | undefined;
+  db: number;
+  keyPrefix: string;
+  defaultTTL: number;
+  maxRetries: number;
+  retryDelay: number;
+  enableOfflineQueue: boolean;
+}

@@ -23,15 +23,15 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
   - [x] 1.5 Create API key validation script to verify credentials
   - [x] 1.6 Add fallback configuration for services without keys
 
-- [ ] 2. Implement core TypeScript infrastructure (Hybrid Approach)
+- [x] 2. Implement core TypeScript infrastructure (Hybrid Approach)
   - [x] 2.1 Create comprehensive type definitions (src/services/types/index.ts)
   - [x] 2.2 Create RateLimiter class for stateful rate limiting
   - [x] 2.3 Define infrastructure interfaces (ICacheManager, IRateLimiter, ILogger)
-  - [ ] 2.4 Implement CacheManager class with Redis connection
-  - [ ] 2.5 Implement Logger class with buffering
-  - [ ] 2.6 Create infrastructure initialization module
-  - [ ] 2.7 Add Result types for error handling
-  - [ ] 2.8 Write infrastructure tests
+  - [x] 2.4 Implement CacheManager class with Redis connection
+  - [x] 2.5 Implement Logger class with buffering
+  - [x] 2.6 Create infrastructure initialization module
+  - [x] 2.7 Add Result types for error handling
+  - [x] 2.8 Write infrastructure tests
 
 - [ ] 3. Build API services as functions (Business Logic)
   - [ ] 3.1 Create createDexScreenerService factory function

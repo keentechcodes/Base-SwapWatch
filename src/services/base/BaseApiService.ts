@@ -14,6 +14,7 @@ import {
 } from '../types';
 import { RateLimiter } from './RateLimiter';
 import { Logger } from '../../utils/logger';
+import type { ILogger } from '../../utils/logger';
 
 /**
  * Abstract base class for all API services
@@ -24,14 +25,14 @@ export abstract class BaseApiService<TConfig extends ApiServiceConfig = ApiServi
   
   protected readonly axios: AxiosInstance;
   protected readonly rateLimiter: RateLimiter;
-  protected readonly logger: Logger;
+  protected readonly logger: ILogger;
   protected metrics: ServiceMetrics;
   
   constructor(
     public readonly config: TConfig,
     protected readonly serviceName: string
   ) {
-    this.logger = new Logger(`API:${serviceName}`);
+    this.logger = Logger({ service: `API:${serviceName}` });
     
     // Initialize axios with interceptors
     this.axios = this.createAxiosInstance();
@@ -244,8 +245,12 @@ export abstract class BaseApiService<TConfig extends ApiServiceConfig = ApiServi
   protected transformError(error: AxiosError): ApiError {
     if (error.response) {
       // Server responded with error
+      const message = (error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data)
+        ? (error.response.data as any).message
+        : error.message;
+      
       return new ApiError(
-        error.response.data?.message || error.message,
+        message,
         error.code || 'API_ERROR',
         error.response.status,
         error.response.status >= 500, // 5xx errors are retryable

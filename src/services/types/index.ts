@@ -468,3 +468,6 @@ export type RequireKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
  * Omit multiple keys with better type inference
  */
 export type OmitStrict<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+
+// Re-export Result types for error handling
+export * from '../../types/result';
