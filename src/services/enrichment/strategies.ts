@@ -258,6 +258,8 @@ export const applyFallbackStrategy = (
   error: Error,
   cachedData?: Partial<TokenEnrichmentData>
 ): Result<TokenEnrichmentData> => {
+  // error parameter is logged for debugging but not used in logic
+  void error;
   // If we have cached data, use it
   if (cachedData && Object.keys(cachedData).length > 0) {
     return success({

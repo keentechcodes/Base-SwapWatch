@@ -8,7 +8,7 @@ import { WebhookEvent } from '../../types/webhook';
 import { SwapData } from '../../utils/swapDetector';
 import { ICacheService } from '../../infrastructure/cache/ICacheService';
 import { ILogger } from '../../infrastructure/logger/ILogger';
-import { IRateLimiter } from '../../infrastructure/rateLimiter/IRateLimiter';
+import { IRateLimiter } from '../types';
 import { DexScreenerService } from '../dexscreener';
 import { BaseScanService } from '../basescan';
 import { TokenMetadataService } from '../tokenMetadata';
@@ -139,6 +139,9 @@ export const createSwapEnricher = (
     fallbackOnError = true,
     parallelFetch = true
   } = config;
+
+  // Note: maxLatency is reserved for future timeout implementation
+  void maxLatency;
 
   // Metrics tracking
   let metrics: EnrichmentMetrics = {
@@ -365,14 +368,14 @@ export const createSwapEnricher = (
         return success(cached.data);
       }
 
-      const pnlResult = await deps.moralisPnL.getWalletPnLSummary(walletAddress);
-      if (pnlResult.success) {
+      const pnlResult = await deps.moralisPnL.getWalletSummary(walletAddress);
+      if (pnlResult) {
         const walletData = {
-          isExperiencedTrader: pnlResult.data.totalTrades > 50,
-          totalProfit: pnlResult.data.totalRealizedProfitUsd,
-          profitPercentage: pnlResult.data.totalRealizedProfitPercentage,
-          totalTrades: pnlResult.data.totalBuys + pnlResult.data.totalSells,
-          winRate: pnlResult.data.winRate
+          isExperiencedTrader: pnlResult.totalTrades > 50,
+          totalProfit: pnlResult.totalRealizedProfitUsd,
+          profitPercentage: pnlResult.totalRealizedProfitPercentage,
+          totalTrades: pnlResult.totalBuys + pnlResult.totalSells,
+          winRate: pnlResult.winRate
         };
         
         await deps.cache.set(cacheKey, walletData, { ttl: TTL.MARKET });

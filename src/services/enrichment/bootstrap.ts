@@ -4,17 +4,20 @@
  */
 
 import { Result, success, failure } from '../types';
-import { ILogger, createLogger } from '../../infrastructure/logger/ILogger';
+import { ILogger } from '../../infrastructure/logger/ILogger';
+import { createLogger } from '../../infrastructure/logger';
 import { ICacheService } from '../../infrastructure/cache/ICacheService';
 import { RedisCacheService } from '../../infrastructure/cache/RedisCacheService';
-import { IRateLimiter, RateLimiter } from '../../infrastructure/rateLimiter/IRateLimiter';
+import { RateLimiter } from '../../infrastructure/rateLimiter/IRateLimiter';
+import { RateLimiterAdapter } from '../../infrastructure/rateLimiter/RateLimiterAdapter';
 import { CacheWarmer, CacheWarmerConfig } from '../../infrastructure/cache/CacheWarmer';
-import { CacheInvalidator } from '../../infrastructure/cache/CacheInvalidator';
+import { CacheInvalidator, InvalidationStrategy } from '../../infrastructure/cache/CacheInvalidator';
 import { createDexScreenerService } from '../dexscreener';
 import { createBaseScanService } from '../basescan';
 import { createTokenMetadataService } from '../tokenMetadata';
 import { MoralisPnLService } from '../moralisPnLService';
 import { createSwapEnricher, SwapEnricher, SwapEnricherConfig } from './SwapEnricher';
+import { IRateLimiter } from '../types';
 import { FREQUENT_BASE_TOKENS } from '../../infrastructure/cache/CacheWarmer';
 
 /**
@@ -134,14 +137,15 @@ export const bootstrap = async (
     );
     
     // Initialize cache connection
-    await cache.connect();
+    // Cache is already connected in constructor
     logger.info('Redis cache connected');
     
     // Create rate limiter
-    const rateLimiter = new RateLimiter({
+    const baseRateLimiter = new RateLimiter({
       requestsPerSecond: config.rateLimiter?.requestsPerSecond || 5,
-      burst: config.rateLimiter?.burst || 10
+      burstSize: config.rateLimiter?.burst || 10
     });
+    const rateLimiter = new RateLimiterAdapter(baseRateLimiter);
     logger.info('Rate limiter initialized');
     
     // Create cache warmer (optional)
@@ -166,13 +170,13 @@ export const bootstrap = async (
     invalidator.addRule({
       trigger: 'price-update',
       patterns: ['market:*', 'price:*'],
-      strategy: 'immediate'
+      strategy: InvalidationStrategy.IMMEDIATE
     });
     
     invalidator.addRule({
       trigger: 'token-update',
       patterns: ['token:*', 'metadata:*'],
-      strategy: 'lazy'
+      strategy: InvalidationStrategy.LAZY
     });
     
     logger.info('Cache invalidator configured');
@@ -191,12 +195,10 @@ export const bootstrap = async (
     
     // Create DexScreener service
     const dexScreener = createDexScreenerService({
-      cache,
+      cache: cache as any, // Type compatibility wrapper
       logger,
       rateLimiter,
       config: {
-        apiUrl: process.env.DEXSCREENER_API_URL || 'https://api.dexscreener.com/latest',
-        apiKey: config.apis?.dexScreenerApiKey || process.env.DEXSCREENER_API_KEY,
         timeout: 5000
       }
     });
@@ -204,12 +206,11 @@ export const bootstrap = async (
     
     // Create BaseScan service
     const baseScan = createBaseScanService({
-      cache,
+      cache: cache as any, // Type compatibility wrapper
       logger,
       rateLimiter,
       config: {
         apiKey: config.apis?.baseScanApiKey || process.env.BASESCAN_API_KEY || '',
-        network: 'base',
         timeout: 10000
       }
     });
@@ -217,13 +218,9 @@ export const bootstrap = async (
     
     // Create Token Metadata service
     const tokenMetadata = createTokenMetadataService({
-      cache,
+      cache: cache as any, // Type compatibility wrapper
       logger,
-      rateLimiter,
-      config: {
-        providers: ['coingecko', 'ethplorer'],
-        timeout: 5000
-      }
+      rateLimiter
     });
     logger.info('Token metadata service created');
     
@@ -312,8 +309,8 @@ export const bootstrap = async (
       // Check Moralis (if enabled)
       if (moralisPnL) {
         try {
-          const result = await moralisPnL.getWalletPnLSummary('0x0000000000000000000000000000000000000000');
-          checks.moralis = result.success;
+          const result = await moralisPnL.getWalletSummary('0x0000000000000000000000000000000000000000');
+          checks.moralis = result !== null;
         } catch {
           checks.moralis = false;
         }

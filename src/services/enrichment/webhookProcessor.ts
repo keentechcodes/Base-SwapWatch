@@ -7,7 +7,7 @@ import { Result, success, failure } from '../types';
 import { WebhookEvent } from '../../types/webhook';
 import { identifySwapEvent, extractSwapData, SwapData } from '../../utils/swapDetector';
 import { SwapEnricher, EnrichedSwapEvent } from './SwapEnricher';
-import { EnrichmentStrategy, determineStrategy } from './strategies';
+import { determineStrategy } from './strategies';
 import { ILogger } from '../../infrastructure/logger/ILogger';
 import { EventLogger } from '../../utils/eventLogger';
 

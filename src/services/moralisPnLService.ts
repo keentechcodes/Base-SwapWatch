@@ -11,6 +11,7 @@ export interface WalletPnLSummary {
   totalTradeVolume: number;
   totalBuys: number;
   totalSells: number;
+  totalTrades: number;
   winRate?: number;
 }
 
@@ -73,6 +74,7 @@ export class MoralisPnLService {
         totalTradeVolume: parseFloat(data.total_trade_volume || '0'),
         totalBuys: data.total_buys || 0,
         totalSells: data.total_sells || 0,
+        totalTrades: (data.total_buys || 0) + (data.total_sells || 0),
         winRate: data.win_rate
       };
     } catch (error: any) {
