@@ -123,6 +123,8 @@ export class CacheInvalidator {
     rule: InvalidationRule,
     metadata?: Record<string, any>
   ): Promise<Result<number>> {
+    // metadata parameter is reserved for future use
+    void metadata;
     switch (rule.strategy) {
       case InvalidationStrategy.IMMEDIATE:
         return this.invalidateImmediate(rule.patterns);

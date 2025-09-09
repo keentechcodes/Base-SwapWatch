@@ -5,7 +5,6 @@
 
 import { RedisClientType, createClient } from 'redis';
 import { 
-  ICacheService, 
   ICacheServiceConfig,
   CacheOptions,
   CacheStats,
@@ -75,7 +74,7 @@ export class RedisCacheService implements IMonitoredCacheService {
     try {
       this.client = createClient({ url });
       
-      this.client.on('error', (err) => {
+      this.client.on('error', (err: Error) => {
         this.logger.error('Redis client error', { error: err });
         this.emitEvent('error', undefined, { error: err });
       });
@@ -483,7 +482,7 @@ export class RedisCacheService implements IMonitoredCacheService {
       const keys = await client.keys(fullPattern);
       
       // Remove namespace prefix
-      const cleanKeys = keys.map(k => k.replace(`${this.config.namespace}:`, ''));
+      const cleanKeys = keys.map((k: string) => k.replace(`${this.config.namespace}:`, ''));
       
       return success(cleanKeys);
     } catch (error) {
@@ -528,7 +527,7 @@ export class RedisCacheService implements IMonitoredCacheService {
       
       // Count keys
       const keys = await client.keys(`${this.config.namespace}:*`);
-      const keyCount = keys.filter(k => !k.endsWith(':meta')).length;
+      const keyCount = keys.filter((k: string) => !k.endsWith(':meta')).length;
       
       return success({
         ...this.stats,
