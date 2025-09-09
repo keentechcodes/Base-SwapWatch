@@ -33,15 +33,15 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
   - [x] 2.7 Add Result types for error handling
   - [x] 2.8 Write infrastructure tests
 
-- [ ] 3. Build API services as functions (Business Logic)
-  - [ ] 3.1 Create createDexScreenerService factory function
-  - [ ] 3.2 Implement pure transformation functions for responses
-  - [ ] 3.3 Create createBaseScanService factory function
-  - [ ] 3.4 Add pure contract verification parser
-  - [ ] 3.5 Create createTokenMetadataService with providers
-  - [ ] 3.6 Implement parallel fetching with Promise.allSettled
-  - [ ] 3.7 Add Result type error handling
-  - [ ] 3.8 Write pure function tests
+- [x] 3. Build API services as functions (Business Logic)
+  - [x] 3.1 Create createDexScreenerService factory function
+  - [x] 3.2 Implement pure transformation functions for responses
+  - [x] 3.3 Create createBaseScanService factory function
+  - [x] 3.4 Add pure contract verification parser
+  - [x] 3.5 Create createTokenMetadataService with providers
+  - [x] 3.6 Implement parallel fetching with Promise.allSettled
+  - [x] 3.7 Add Result type error handling
+  - [x] 3.8 Write pure function tests
 
 - [ ] 4. Implement type-safe caching layer
   - [ ] 4.1 Create ICacheService interface with generics
