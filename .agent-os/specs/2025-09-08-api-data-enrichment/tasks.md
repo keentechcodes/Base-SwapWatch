@@ -3,7 +3,15 @@
 These are the tasks to be completed for the spec detailed in @.agent-os/specs/2025-09-08-api-data-enrichment/spec.md
 
 > Created: 2025-09-08
-> Status: Ready for Implementation
+> Updated: 2025-09-08 - Refined with TypeScript-first approach
+> Status: In Progress - Task 1 Complete, Architecture Documented
+
+## Completed
+
+- [x] **Architecture Documentation** - Created comprehensive architecture synthesis combining ScanTrack patterns with TypeScript
+- [x] **Reference Implementation** - Documented ScanTrack's proven patterns for adoption
+- [x] **Paradigm Decision** - Analyzed and adopted Hybrid Approach (Classes for infrastructure, Functions for business logic)
+- [x] **Standards Documentation** - Created Hybrid Architecture Standard and TypeScript Coding Standards
 
 ## Tasks
 
@@ -15,42 +23,56 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
   - [x] 1.5 Create API key validation script to verify credentials
   - [x] 1.6 Add fallback configuration for services without keys
 
-- [ ] 2. Implement core API service infrastructure
-  - [ ] 2.1 Write tests for API service base class and error handling
-  - [ ] 2.2 Create src/services directory structure
-  - [ ] 2.3 Implement BaseAPIService class with retry logic and rate limiting
-  - [ ] 2.4 Add axios interceptors for request/response handling
-  - [ ] 2.5 Implement exponential backoff for failed requests
-  - [ ] 2.6 Create circuit breaker pattern for API failures
-  - [ ] 2.7 Add performance metrics collection
-  - [ ] 2.8 Verify all tests pass
+- [ ] 2. Implement core TypeScript infrastructure (Hybrid Approach)
+  - [x] 2.1 Create comprehensive type definitions (src/services/types/index.ts)
+  - [x] 2.2 Create RateLimiter class for stateful rate limiting
+  - [x] 2.3 Define infrastructure interfaces (ICacheManager, IRateLimiter, ILogger)
+  - [ ] 2.4 Implement CacheManager class with Redis connection
+  - [ ] 2.5 Implement Logger class with buffering
+  - [ ] 2.6 Create infrastructure initialization module
+  - [ ] 2.7 Add Result types for error handling
+  - [ ] 2.8 Write infrastructure tests
 
-- [ ] 3. Build DexScreener and BaseScan API integrations
-  - [ ] 3.1 Write tests for DexScreenerService
-  - [ ] 3.2 Implement DexScreenerService for price and market data
-  - [ ] 3.3 Write tests for BaseScanService
-  - [ ] 3.4 Implement BaseScanService for contract verification
-  - [ ] 3.5 Create TokenMetadataService for token information
-  - [ ] 3.6 Add data transformation layer for API responses
-  - [ ] 3.7 Implement parallel API calls with p-limit
-  - [ ] 3.8 Verify all tests pass
+- [ ] 3. Build API services as functions (Business Logic)
+  - [ ] 3.1 Create createDexScreenerService factory function
+  - [ ] 3.2 Implement pure transformation functions for responses
+  - [ ] 3.3 Create createBaseScanService factory function
+  - [ ] 3.4 Add pure contract verification parser
+  - [ ] 3.5 Create createTokenMetadataService with providers
+  - [ ] 3.6 Implement parallel fetching with Promise.allSettled
+  - [ ] 3.7 Add Result type error handling
+  - [ ] 3.8 Write pure function tests
 
-- [ ] 4. Implement Redis caching layer
-  - [ ] 4.1 Write tests for cache operations
-  - [ ] 4.2 Set up Redis connection with connection pooling
-  - [ ] 4.3 Implement cache-first data fetching strategy
+- [ ] 4. Implement type-safe caching layer
+  - [ ] 4.1 Create ICacheService interface with generics
+  - [ ] 4.2 Implement RedisCacheManager with TypeScript
+  - [ ] 4.3 Add typed cache key builders
   - [ ] 4.4 Configure component-specific TTLs (market: 5min, metadata: 2hr, verification: 24hr)
-  - [ ] 4.5 Add cache warming for popular tokens
-  - [ ] 4.6 Create cache invalidation endpoints
-  - [ ] 4.7 Add cache hit/miss metrics
-  - [ ] 4.8 Verify all tests pass
+  - [ ] 4.5 Implement cache warming strategy
+  - [ ] 4.6 Add cache invalidation patterns
+  - [ ] 4.7 Create cache metrics collector
+  - [ ] 4.8 Write cache behavior tests
 
-- [ ] 5. Integrate enrichment pipeline with webhook processing
-  - [ ] 5.1 Write tests for SwapEnricher orchestrator
-  - [ ] 5.2 Create SwapEnricher class to coordinate API calls
-  - [ ] 5.3 Integrate enrichment into webhook event processing
-  - [ ] 5.4 Calculate USD values with proper decimal handling
-  - [ ] 5.5 Enhance EventLogger with enriched data display
-  - [ ] 5.6 Add graceful degradation for API failures
-  - [ ] 5.7 Create health check endpoint for API status
-  - [ ] 5.8 Verify all tests pass with real webhook events
+- [ ] 5. Build enrichment orchestration (Hybrid Composition)
+  - [ ] 5.1 Create createSwapEnricher factory function
+  - [ ] 5.2 Implement bootstrap module to wire dependencies
+  - [ ] 5.3 Add enrichment strategies as pure functions
+  - [ ] 5.4 Integrate with webhook event processor
+  - [ ] 5.5 Create pure USD calculation functions
+  - [ ] 5.6 Enhance EventLogger with typed enriched data
+  - [ ] 5.7 Implement health check as function
+  - [ ] 5.8 Add end-to-end tests with real events
+
+## Additional Tasks (Post-MVP)
+
+- [ ] 6. Performance optimization
+  - [ ] 6.1 Implement request batching for multiple tokens
+  - [ ] 6.2 Add connection pooling for Redis
+  - [ ] 6.3 Optimize cache key patterns
+  - [ ] 6.4 Add performance benchmarks
+
+- [ ] 7. Monitoring and observability
+  - [ ] 7.1 Integrate with Prometheus metrics
+  - [ ] 7.2 Add distributed tracing
+  - [ ] 7.3 Create Grafana dashboards
+  - [ ] 7.4 Set up alerting rules
