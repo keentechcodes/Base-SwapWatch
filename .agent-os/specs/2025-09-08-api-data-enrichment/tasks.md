@@ -43,15 +43,15 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
   - [x] 3.7 Add Result type error handling
   - [x] 3.8 Write pure function tests
 
-- [ ] 4. Implement type-safe caching layer
-  - [ ] 4.1 Create ICacheService interface with generics
-  - [ ] 4.2 Implement RedisCacheManager with TypeScript
-  - [ ] 4.3 Add typed cache key builders
-  - [ ] 4.4 Configure component-specific TTLs (market: 5min, metadata: 2hr, verification: 24hr)
-  - [ ] 4.5 Implement cache warming strategy
-  - [ ] 4.6 Add cache invalidation patterns
-  - [ ] 4.7 Create cache metrics collector
-  - [ ] 4.8 Write cache behavior tests
+- [x] 4. Implement type-safe caching layer
+  - [x] 4.1 Create ICacheService interface with generics
+  - [x] 4.2 Implement RedisCacheManager with TypeScript
+  - [x] 4.3 Add typed cache key builders
+  - [x] 4.4 Configure component-specific TTLs (market: 5min, metadata: 2hr, verification: 24hr)
+  - [x] 4.5 Implement cache warming strategy
+  - [x] 4.6 Add cache invalidation patterns
+  - [x] 4.7 Create cache metrics collector
+  - [x] 4.8 Write cache behavior tests
 
 - [ ] 5. Build enrichment orchestration (Hybrid Composition)
   - [ ] 5.1 Create createSwapEnricher factory function
