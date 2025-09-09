@@ -1,7 +1,8 @@
 /**
- * BaseScan service factory function
+ * Etherscan v2 service factory function (for Base chain)
  * Following hybrid architecture: functions for business logic
- * Requires API key for BaseScan
+ * Requires API key from Etherscan.io (supports multi-chain)
+ * Uses chainid=8453 for Base mainnet
  */
 
 import axios, { AxiosInstance } from 'axios';
@@ -60,14 +61,17 @@ export const createBaseScanService = (
   const { cache, logger, rateLimiter, config } = deps;
   
   if (!config.apiKey) {
-    logger.warn('BaseScan API key not provided, service will have limited functionality');
+    logger.warn('Etherscan API key not provided, service will have limited functionality');
   }
 
-  // Configure axios instance
+  // Configure axios instance for Etherscan v2 API
+  // Default to Base mainnet chain ID (8453) if not specified
+  const chainId = config.chainId || 8453;
   const axiosInstance: AxiosInstance = axios.create({
-    baseURL: config.baseUrl || 'https://api.basescan.org/api',
+    baseURL: config.baseUrl || 'https://api.etherscan.io/v2/api',
     timeout: config.timeout || 10000,
     params: {
+      chainid: chainId,
       apikey: config.apiKey
     }
   });
@@ -95,7 +99,7 @@ export const createBaseScanService = (
     // Rate limited API call
     const result = await fromPromise(
       rateLimiter.execute(async () => {
-        logger.info('Making BaseScan API request', { module, action });
+        logger.info('Making Etherscan v2 API request', { module, action, chainId });
         const response = await axiosInstance.get<BaseScanResponse<T>>('', {
           params: {
             module,
@@ -108,16 +112,16 @@ export const createBaseScanService = (
     );
 
     if (!result.success) {
-      logger.error('BaseScan API request failed', result.error);
+      logger.error('Etherscan API request failed', result.error);
       return failure(result.error);
     }
 
     if (!isValidBaseScanResponse<T>(result.data)) {
-      return failure(new Error('Invalid BaseScan response format'));
+      return failure(new Error('Invalid Etherscan response format'));
     }
 
     if (!isSuccessfulResponse(result.data)) {
-      return failure(new Error(`BaseScan API error: ${result.data.message}`));
+      return failure(new Error(`Etherscan API error: ${result.data.message}`));
     }
 
     // Cache successful result
@@ -289,6 +293,8 @@ export const createBaseScanService = (
 
   /**
    * Check if address is a contract
+   * Note: eth_getCode may not be supported on all chains in v2
+   * Falls back to checking if contract source code exists
    */
   const isContract = async (address: string): Promise<Result<boolean>> => {
     const cacheKey = `basescan:iscontract:${address.toLowerCase()}`;
@@ -299,18 +305,35 @@ export const createBaseScanService = (
       return success(cached);
     }
 
-    // Get contract code
-    const result = await makeRequest<string>(
+    // Try to get contract code first (may not work on all chains)
+    const codeResult = await makeRequest<string>(
       'proxy',
       'eth_getCode',
       { address, tag: 'latest' }
     );
 
-    if (!result.success) {
-      return failure(result.error);
+    if (codeResult.success) {
+      const isContractAddress = codeResult.data !== '0x' && codeResult.data !== '';
+      await cache.set(cacheKey, isContractAddress, 86400);
+      return success(isContractAddress);
     }
 
-    const isContractAddress = result.data !== '0x' && result.data !== '';
+    // Fallback: Check if contract source code exists
+    const sourceResult = await makeRequest<BaseScanContract[]>(
+      'contract',
+      'getsourcecode',
+      { address }
+    );
+
+    if (!sourceResult.success) {
+      // If both methods fail, we can't determine contract status
+      logger.warn('Unable to determine if address is contract', { address });
+      return success(false); // Default to false rather than error
+    }
+
+    const isContractAddress = Array.isArray(sourceResult.data) && 
+                              sourceResult.data.length > 0 && 
+                              sourceResult.data[0].SourceCode !== '';
     
     // Cache for 24 hours
     await cache.set(cacheKey, isContractAddress, 86400);

@@ -6,7 +6,7 @@ This guide walks you through obtaining and configuring API keys for the SwapWatc
 - [Quick Start](#quick-start)
 - [Service Overview](#service-overview)
 - [DexScreener API](#dexscreener-api)
-- [BaseScan API](#basescan-api)
+- [Etherscan API (Multi-chain)](#etherscan-api-multi-chain-support-including-base)
 - [Token Metadata Options](#token-metadata-options)
 - [Redis Setup](#redis-setup)
 - [Environment Configuration](#environment-configuration)
@@ -19,7 +19,7 @@ This guide walks you through obtaining and configuring API keys for the SwapWatc
 | Service | Required | Free Tier | Setup Time |
 |---------|----------|-----------|------------|
 | DexScreener | No | ✅ Public API | 0 minutes |
-| BaseScan | Yes | ✅ 100k calls/day | 5 minutes |
+| Etherscan (for Base) | Yes | ✅ 100k calls/day | 5 minutes |
 | Redis | No (local) | ✅ Local or free cloud | 5 minutes |
 | Token Metadata | Optional | ✅ Multiple options | 0-10 minutes |
 
@@ -40,11 +40,12 @@ You can start using the enrichment features immediately with:
 - Liquidity pool data
 - No API key required!
 
-**BaseScan API**
+**Etherscan API (for Base chain)**
 - Contract verification status
 - Token creation details
 - Transaction history
-- Requires free API key
+- Multi-chain support with single API key
+- Requires free API key from Etherscan.io
 
 **Token Metadata**
 - Token names and symbols
@@ -81,10 +82,12 @@ DEXSCREENER_API_URL=https://api.dexscreener.com/latest
 curl "https://api.dexscreener.com/latest/dex/tokens/0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 ```
 
-## BaseScan API
+## Etherscan API (Multi-chain Support including Base)
 
-### Step 1: Create Account
-1. Visit [BaseScan.org](https://basescan.org/register)
+> **Important Update (January 2025)**: BaseScan v1 API has been deprecated since August 2024. You must now use Etherscan v2 API which provides unified access to 50+ blockchain networks including Base chain.
+
+### Step 1: Create Etherscan Account
+1. Visit [Etherscan.io](https://etherscan.io/register)
 2. Click "Sign Up" in the top right
 3. Fill in:
    - Username (any username you prefer)
@@ -96,18 +99,31 @@ curl "https://api.dexscreener.com/latest/dex/tokens/0x833589fCD6eDb6E08f4c7C32D4
 7. Click the verification link to activate
 
 ### Step 2: Generate API Key
-1. Log in to [BaseScan.org](https://basescan.org/login)
-2. Navigate to [API Keys](https://basescan.org/myapikey)
+1. Log in to [Etherscan.io](https://etherscan.io/login)
+2. Navigate to [API Keys](https://etherscan.io/myapikey)
 3. Click "Add" button to create new key
 4. Enter App Name: "SwapWatch" (or your preferred name)
 5. Click "Create New API Key"
 6. Copy your API key (looks like: `ABC123DEF456...`)
 
+**Note**: This single Etherscan API key now works for all supported chains including Base, Ethereum, Arbitrum, Optimism, and 50+ other networks.
+
 ### Step 3: Configure
 ```env
 # Add to your .env file
-BASESCAN_API_KEY=your_api_key_here
+ETHERSCAN_API_KEY=your_api_key_here
+
+# The service will automatically use Etherscan v2 with Base chain ID (8453)
+# No need to specify separate BaseScan URL anymore
 ```
+
+### Supported Chain IDs
+- **Base Mainnet**: 8453
+- **Base Sepolia Testnet**: 84532
+- **Ethereum Mainnet**: 1
+- **Arbitrum One**: 42161
+- **Optimism**: 10
+- [Full list of supported chains](https://docs.etherscan.io/etherscan-v2/getting-started/supported-chains)
 
 ### Rate Limits
 - **Free Tier**: 5 calls/second, 100,000 calls/day
@@ -115,9 +131,18 @@ BASESCAN_API_KEY=your_api_key_here
 
 ### Testing
 ```bash
-# Test your BaseScan API key
-curl "https://api.basescan.org/api?module=contract&action=getabi&address=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913&apikey=YOUR_API_KEY"
+# Test your Etherscan API key with Base chain (chainid=8453)
+curl "https://api.etherscan.io/v2/api?chainid=8453&module=contract&action=getabi&address=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913&apikey=YOUR_API_KEY"
+
+# Test with Ethereum mainnet (chainid=1)
+curl "https://api.etherscan.io/v2/api?chainid=1&module=stats&action=ethprice&apikey=YOUR_API_KEY"
 ```
+
+### Migration from BaseScan v1
+If you previously used BaseScan v1 API:
+1. Replace `BASESCAN_API_KEY` with `ETHERSCAN_API_KEY` in your `.env`
+2. The service automatically handles the v2 endpoint and chain ID
+3. All existing functionality remains the same
 
 ## Token Metadata Options
 
@@ -272,9 +297,9 @@ WEBHOOK_SECRET=your-webhook-secret-here
 # API Services
 DEXSCREENER_API_URL=https://api.dexscreener.com/latest
 
-# BaseScan API (Required for contract verification)
-BASESCAN_API_KEY=your_basescan_api_key_here
-BASESCAN_API_URL=https://api.basescan.org/api
+# Etherscan API v2 (Required for contract verification on Base chain)
+ETHERSCAN_API_KEY=your_etherscan_api_key_here
+# Note: The service will automatically use chainid=8453 for Base
 
 # Token Metadata (Choose one option)
 # Option 1: Public RPC (no key needed)
@@ -300,7 +325,7 @@ CACHE_TTL_VERIFICATION=86400 # 24 hours for contract verification
 CACHE_TTL_FACTORY=86400     # 24 hours for factory info
 
 # Rate Limiting
-BASESCAN_RATE_LIMIT=5       # requests per second
+ETHERSCAN_RATE_LIMIT=5      # requests per second
 API_RETRY_ATTEMPTS=3
 API_RETRY_DELAY=1000        # milliseconds
 
@@ -318,8 +343,8 @@ Test each service individually:
 # 1. Test DexScreener (no key needed)
 curl "https://api.dexscreener.com/latest/dex/tokens/0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 
-# 2. Test BaseScan (replace YOUR_KEY)
-curl "https://api.basescan.org/api?module=stats&action=baseprice&apikey=YOUR_KEY"
+# 2. Test Etherscan v2 for Base chain (replace YOUR_KEY)
+curl "https://api.etherscan.io/v2/api?chainid=8453&module=stats&action=ethprice&apikey=YOUR_KEY"
 
 # 3. Test Redis
 redis-cli ping
@@ -340,7 +365,7 @@ npm run validate-apis
 
 This will test:
 - ✅ DexScreener connectivity
-- ✅ BaseScan API key validity
+- ✅ Etherscan API key validity (v2 with Base chain)
 - ✅ Redis connection
 - ✅ RPC endpoint availability
 - ✅ Rate limiting configuration
@@ -349,10 +374,11 @@ This will test:
 
 ### Common Issues
 
-**BaseScan API Key Not Working**
-- Ensure you've verified your email
+**Etherscan API Key Not Working**
+- Ensure you've verified your email on Etherscan.io
 - Check for typos in the API key
-- Verify the key is active in your BaseScan dashboard
+- Verify the key is active in your Etherscan dashboard
+- Make sure you're using Etherscan.io key, not old BaseScan key
 - Free tier limit: 100,000 calls/day
 
 **Redis Connection Failed**
@@ -361,7 +387,7 @@ This will test:
 - Verify password is correct (if set)
 
 **Rate Limit Errors**
-- BaseScan: Maximum 5 requests/second
+- Etherscan v2: Maximum 5 requests/second
 - Implement exponential backoff (already in our code)
 - Consider upgrading to Pro tier if needed
 
@@ -374,7 +400,7 @@ This will test:
 
 The system includes automatic fallbacks:
 
-1. **If BaseScan fails** → Shows "Verification Unknown"
+1. **If Etherscan API fails** → Shows "Verification Unknown"
 2. **If DexScreener fails** → Shows basic swap data without prices
 3. **If Redis fails** → Continues without caching
 4. **If token metadata fails** → Shows contract addresses only
@@ -386,8 +412,9 @@ If you encounter issues:
 2. Run validation: `npm run validate-apis`
 3. Review this guide for missed steps
 4. Check service status pages:
-   - [BaseScan Status](https://basescan.org/apis#status)
+   - [Etherscan Status](https://etherscan.io/apis#status)
    - [DexScreener Status](https://dexscreener.com)
+5. Verify you're using the correct chain ID (8453 for Base)
 
 ## Next Steps
 

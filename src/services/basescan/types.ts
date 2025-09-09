@@ -1,6 +1,7 @@
 /**
- * BaseScan API types
+ * Etherscan v2 API types (compatible with Base chain)
  * Following TypeScript coding standards: explicit types, no any
+ * These types are compatible with both BaseScan v1 and Etherscan v2 responses
  */
 
 export interface BaseScanResponse<T> {
@@ -99,6 +100,7 @@ export interface BaseScanTokenInfo {
 export interface BaseScanServiceConfig {
   apiKey: string;
   baseUrl?: string;
+  chainId?: number; // Optional chain ID override (defaults to 8453 for Base)
   timeout?: number;
   retryAttempts?: number;
   retryDelay?: number;

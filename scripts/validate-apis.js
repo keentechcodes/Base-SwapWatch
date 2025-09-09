@@ -59,24 +59,27 @@ async function testDexScreener() {
   }
 }
 
-// Test BaseScan API
-async function testBaseScan() {
-  console.log(chalk.cyan('\n🔍 Testing BaseScan API...'));
+// Test Etherscan API v2 (for Base chain)
+async function testEtherscan() {
+  console.log(chalk.cyan('\n🔍 Testing Etherscan API v2 (Base chain)...'));
   
-  const apiKey = process.env.BASESCAN_API_KEY;
+  const apiKey = process.env.ETHERSCAN_API_KEY || process.env.BASESCAN_API_KEY; // Support both for migration
   
-  if (!apiKey || apiKey === 'your_basescan_api_key_here') {
-    printStatus('BaseScan', 'warning', 'API key not configured - Set BASESCAN_API_KEY in .env');
-    console.log(chalk.gray('  → Sign up at: https://basescan.org/apis'));
+  if (!apiKey || apiKey === 'your_etherscan_api_key_here' || apiKey === 'your_basescan_api_key_here') {
+    printStatus('Etherscan', 'warning', 'API key not configured - Set ETHERSCAN_API_KEY in .env');
+    console.log(chalk.gray('  → Sign up at: https://etherscan.io/apis'));
+    console.log(chalk.gray('  → Note: BaseScan v1 API is deprecated, use Etherscan v2'));
     return false;
   }
   
   try {
-    const url = process.env.BASESCAN_API_URL || 'https://api.basescan.org/api';
+    // Use Etherscan v2 API with Base chain ID (8453)
+    const url = 'https://api.etherscan.io/v2/api';
     const response = await axios.get(url, {
       params: {
+        chainid: 8453, // Base mainnet chain ID
         module: 'stats',
-        action: 'baseprice',
+        action: 'ethprice',
         apikey: apiKey
       },
       timeout: 5000
@@ -84,20 +87,20 @@ async function testBaseScan() {
     
     if (response.data.status === '1') {
       const price = response.data.result?.ethusd || 'N/A';
-      printStatus('BaseScan', 'success', `API key valid - Base price: $${price}`);
+      printStatus('Etherscan', 'success', `API key valid (Base chain) - ETH price: $${price}`);
       return true;
     } else if (response.data.message === 'NOTOK') {
-      printStatus('BaseScan', 'failed', `Invalid API key: ${response.data.result}`);
+      printStatus('Etherscan', 'failed', `Invalid API key: ${response.data.result}`);
       return false;
     } else {
-      printStatus('BaseScan', 'warning', 'Unexpected response format');
+      printStatus('Etherscan', 'warning', 'Unexpected response format');
       return true;
     }
   } catch (error) {
     if (error.response?.status === 401) {
-      printStatus('BaseScan', 'failed', 'Invalid API key');
+      printStatus('Etherscan', 'failed', 'Invalid API key');
     } else {
-      printStatus('BaseScan', 'failed', `Connection failed: ${error.message}`);
+      printStatus('Etherscan', 'failed', `Connection failed: ${error.message}`);
     }
     return false;
   }
@@ -209,11 +212,11 @@ async function testOptionalServices() {
 function checkRateLimiting() {
   console.log(chalk.cyan('\n⚡ Checking rate limiting configuration...'));
   
-  const baseScanLimit = process.env.BASESCAN_RATE_LIMIT || '5';
+  const etherscanLimit = process.env.ETHERSCAN_RATE_LIMIT || process.env.BASESCAN_RATE_LIMIT || '5';
   const retryAttempts = process.env.API_RETRY_ATTEMPTS || '3';
   const retryDelay = process.env.API_RETRY_DELAY || '1000';
   
-  console.log(chalk.gray(`  • BaseScan rate limit: ${baseScanLimit} req/sec`));
+  console.log(chalk.gray(`  • Etherscan rate limit: ${etherscanLimit} req/sec`));
   console.log(chalk.gray(`  • Retry attempts: ${retryAttempts}`));
   console.log(chalk.gray(`  • Retry delay: ${retryDelay}ms`));
   
@@ -246,7 +249,7 @@ async function validateAPIs() {
   
   // Run all tests
   await testDexScreener();
-  await testBaseScan();
+  await testEtherscan();
   await testRedis();
   await testRPC();
   await testOptionalServices();
