@@ -13,20 +13,30 @@
     "clean": "rm -rf dist coverage",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
-    "validate-apis": "node scripts/validate-apis.js"
+    "validate-apis": "node scripts/validate-apis.js",
+    "webhook": "node scripts/cdp-webhook-manager.js",
+    "webhook:list": "node scripts/cdp-webhook-manager.js list",
+    "webhook:create": "node scripts/cdp-webhook-manager.js create",
+    "webhook:update": "node scripts/cdp-webhook-manager.js update",
+    "webhook:delete": "node scripts/cdp-webhook-manager.js delete",
+    "webhook:monitor": "node scripts/cdp-webhook-manager.js monitor",
+    "webhook:activate": "node scripts/cdp-webhook-manager.js activate",
+    "webhook:deactivate": "node scripts/cdp-webhook-manager.js deactivate"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@coinbase/cdp-sdk": "^1.36.1",
     "@coinbase/coinbase-sdk": "^0.25.0",
     "axios": "^1.11.0",
     "bignumber.js": "^9.3.1",
     "chalk": "^4.1.2",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
-    "ioredis": "^5.7.0"
+    "ioredis": "^5.7.0",
+    "redis": "^5.8.2"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
