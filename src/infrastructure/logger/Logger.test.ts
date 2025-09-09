@@ -1,7 +1,5 @@
 import { Logger } from './Logger';
-import { LogLevel } from './ILogger';
 import * as fs from 'fs/promises';
-import * as path from 'path';
 
 describe('Logger', () => {
   let logger: Logger;

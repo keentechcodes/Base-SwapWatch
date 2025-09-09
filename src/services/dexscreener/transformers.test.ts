@@ -119,8 +119,8 @@ describe('DexScreener Transformers', () => {
       expect(dexInfo.routerAddress).toBe('0x123456');
       expect(dexInfo.pairAddress).toBe('0x123456');
       expect(dexInfo.poolUrl).toBe('https://dexscreener.com/base/0x123');
-      expect(dexInfo.liquidity.usd).toBe('1000000');
-      expect(dexInfo.fees.swapFee).toBe('0.003');
+      expect(dexInfo.liquidity?.usd).toBe('1000000');
+      expect(dexInfo.fees?.swapFee).toBe('0.003');
     });
   });
 

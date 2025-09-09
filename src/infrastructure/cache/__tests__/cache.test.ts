@@ -15,7 +15,10 @@ const mockLogger: ILogger = {
   debug: jest.fn(),
   info: jest.fn(),
   warn: jest.fn(),
-  error: jest.fn()
+  error: jest.fn(),
+  flush: jest.fn(),
+  setLevel: jest.fn(),
+  getBufferedLogs: jest.fn(() => [])
 };
 
 // Mock Redis client
@@ -78,13 +81,17 @@ describe('Cache Service Tests', () => {
       
       const getResult = await cacheService.get(key);
       expect(getResult.success).toBe(true);
-      expect(getResult.data).toEqual(value);
+      if (getResult.success) {
+        expect(getResult.data).toEqual(value);
+      }
     });
     
     test('should handle cache miss', async () => {
       const result = await cacheService.get('nonexistent');
       expect(result.success).toBe(true);
-      expect(result.data).toBeNull();
+      if (result.success) {
+        expect(result.data).toBeNull();
+      }
     });
     
     test('should delete value', async () => {
@@ -95,7 +102,9 @@ describe('Cache Service Tests', () => {
       expect(deleteResult.success).toBe(true);
       
       const getResult = await cacheService.get(key);
-      expect(getResult.data).toBeNull();
+      if (getResult.success) {
+        expect(getResult.data).toBeNull();
+      }
     });
     
     test('should set multiple values', async () => {
@@ -114,7 +123,9 @@ describe('Cache Service Tests', () => {
       const result = await cacheService.getMany<string>(keys);
       
       expect(result.success).toBe(true);
-      expect(result.data).toBeInstanceOf(Map);
+      if (result.success) {
+        expect(result.data).toBeInstanceOf(Map);
+      }
     });
   });
   
@@ -148,13 +159,17 @@ describe('Cache Service Tests', () => {
       
       const result = await cacheService.deleteByPattern('pattern:*');
       expect(result.success).toBe(true);
-      expect(result.data).toBe(2);
+      if (result.success) {
+        expect(result.data).toBe(2);
+      }
     });
     
     test('should get keys by pattern', async () => {
       const result = await cacheService.keys('test:*');
       expect(result.success).toBe(true);
-      expect(Array.isArray(result.data)).toBe(true);
+      if (result.success) {
+        expect(Array.isArray(result.data)).toBe(true);
+      }
     });
   });
   

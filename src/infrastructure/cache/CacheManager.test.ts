@@ -1,5 +1,4 @@
 import { CacheManager } from './CacheManager';
-import { ICacheManager } from './ICacheManager';
 
 describe('CacheManager', () => {
   let cacheManager: CacheManager;

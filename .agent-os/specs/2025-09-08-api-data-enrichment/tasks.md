@@ -53,15 +53,15 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
   - [x] 4.7 Create cache metrics collector
   - [x] 4.8 Write cache behavior tests
 
-- [ ] 5. Build enrichment orchestration (Hybrid Composition)
-  - [ ] 5.1 Create createSwapEnricher factory function
-  - [ ] 5.2 Implement bootstrap module to wire dependencies
-  - [ ] 5.3 Add enrichment strategies as pure functions
-  - [ ] 5.4 Integrate with webhook event processor
-  - [ ] 5.5 Create pure USD calculation functions
-  - [ ] 5.6 Enhance EventLogger with typed enriched data
-  - [ ] 5.7 Implement health check as function
-  - [ ] 5.8 Add end-to-end tests with real events
+- [x] 5. Build enrichment orchestration (Hybrid Composition)
+  - [x] 5.1 Create createSwapEnricher factory function
+  - [x] 5.2 Implement bootstrap module to wire dependencies
+  - [x] 5.3 Add enrichment strategies as pure functions
+  - [x] 5.4 Integrate with webhook event processor
+  - [x] 5.5 Create pure USD calculation functions
+  - [x] 5.6 Enhance EventLogger with typed enriched data
+  - [x] 5.7 Implement health check as function
+  - [x] 5.8 Add end-to-end tests with real events
 
 ## Additional Tasks (Post-MVP)
 

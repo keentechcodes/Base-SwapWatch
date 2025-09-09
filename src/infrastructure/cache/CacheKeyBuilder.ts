@@ -16,7 +16,8 @@ export enum CacheNamespace {
   ENS = 'ens',
   SWAP = 'swap',
   PRICE = 'price',
-  METADATA = 'metadata'
+  METADATA = 'metadata',
+  WALLET = 'wallet'
 }
 
 /**
@@ -303,6 +304,27 @@ export class CacheKeys {
     
     pattern: (chain = this.DEFAULT_CHAIN) =>
       new CacheKeyBuilder({ namespace: CacheNamespace.PRICE, chain })
+        .pattern('*')
+  };
+  
+  /**
+   * Wallet data keys (5 minute TTL)
+   */
+  static readonly wallet = {
+    pnl: (address: string, chain = this.DEFAULT_CHAIN) =>
+      new CacheKeyBuilder({ namespace: CacheNamespace.WALLET, chain })
+        .build('pnl', address),
+    
+    portfolio: (address: string, chain = this.DEFAULT_CHAIN) =>
+      new CacheKeyBuilder({ namespace: CacheNamespace.WALLET, chain })
+        .build('portfolio', address),
+    
+    history: (address: string, chain = this.DEFAULT_CHAIN) =>
+      new CacheKeyBuilder({ namespace: CacheNamespace.WALLET, chain })
+        .build('history', address),
+    
+    pattern: (chain = this.DEFAULT_CHAIN) =>
+      new CacheKeyBuilder({ namespace: CacheNamespace.WALLET, chain })
         .pattern('*')
   };
   

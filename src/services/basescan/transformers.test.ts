@@ -4,7 +4,6 @@ import {
   transformBaseScanTokenInfo,
   transformTransaction,
   calculateTransactionCost,
-  transformTokenTransfer,
   calculateAddressMetrics,
   isValidBaseScanResponse,
   isSuccessfulResponse,
@@ -14,8 +13,7 @@ import {
 import { 
   BaseScanContract, 
   BaseScanTokenInfo, 
-  BaseScanTransaction,
-  BaseScanTokenTransfer 
+  BaseScanTransaction 
 } from './types';
 
 describe('BaseScan Transformers', () => {
