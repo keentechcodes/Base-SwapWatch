@@ -7,7 +7,7 @@ import { Result, success, failure } from '../types';
 import { ILogger } from '../../infrastructure/logger/ILogger';
 import { createLogger } from '../../infrastructure/logger';
 import { ICacheService } from '../../infrastructure/cache/ICacheService';
-import { RedisCacheService } from '../../infrastructure/cache/RedisCacheService';
+// import { RedisCacheService } from '../../infrastructure/cache/RedisCacheService';
 import { RateLimiter } from '../../infrastructure/rateLimiter/IRateLimiter';
 import { RateLimiterAdapter } from '../../infrastructure/rateLimiter/RateLimiterAdapter';
 import { CacheWarmer, CacheWarmerConfig } from '../../infrastructure/cache/CacheWarmer';
@@ -124,21 +124,230 @@ export const bootstrap = async (
     
     logger.info('Starting bootstrap process');
     
-    // Create cache service
-    const cache = new RedisCacheService(
-      {
-        defaultTTL: config.cache?.defaultTTL || 300,
-        enableCompression: config.cache?.enableCompression !== false,
-        enableMetrics: config.cache?.enableMetrics !== false,
-        namespace: config.cache?.namespace || 'swapwatch'
-      },
-      logger,
-      config.redis?.url || process.env.REDIS_URL || 'redis://localhost:6379'
-    );
+    // Create cache service - Using in-memory cache instead of Redis for now
+    // const cache = new RedisCacheService(
+    //   {
+    //     defaultTTL: config.cache?.defaultTTL || 300,
+    //     enableCompression: config.cache?.enableCompression !== false,
+    //     enableMetrics: config.cache?.enableMetrics !== false,
+    //     namespace: config.cache?.namespace || 'swapwatch'
+    //   },
+    //   logger,
+    //   config.redis?.url || process.env.REDIS_URL || 'redis://localhost:6379'
+    // );
     
-    // Initialize cache connection
-    // Cache is already connected in constructor
-    logger.info('Redis cache connected');
+    // Simple in-memory cache implementation with minimal ICacheService compliance
+    const cacheStore = new Map<string, { value: any, expiry: number }>();
+    const cache: any = {
+      async get<T>(key: string): Promise<Result<T | null>> {
+        try {
+          const item = cacheStore.get(key);
+          if (!item) return success(null);
+          if (item.expiry < Date.now()) {
+            cacheStore.delete(key);
+            return success(null);
+          }
+          return success(item.value as T);
+        } catch (error: any) {
+          return failure(error);
+        }
+      },
+      async set<T>(key: string, value: T, options?: any): Promise<Result<void>> {
+        try {
+          const ttl = typeof options === 'number' ? options : options?.ttl || 300;
+          const expiry = Date.now() + (ttl * 1000);
+          cacheStore.set(key, { value, expiry });
+          return success(undefined);
+        } catch (error: any) {
+          return failure(error);
+        }
+      },
+      async delete(key: string): Promise<Result<void>> {
+        try {
+          cacheStore.delete(key);
+          return success(undefined);
+        } catch (error: any) {
+          return failure(error);
+        }
+      },
+      async flush(): Promise<Result<void>> {
+        try {
+          cacheStore.clear();
+          return success(undefined);
+        } catch (error: any) {
+          return failure(error);
+        }
+      },
+      async ping(): Promise<Result<boolean>> {
+        return success(true);
+      },
+      async mget<T>(keys: string[]): Promise<Result<(T | null)[]>> {
+        try {
+          const results = await Promise.all(
+            keys.map(async key => {
+              const result = await cache.get(key);
+              return result.success ? result.data as T : null;
+            })
+          );
+          return success(results);
+        } catch (error: any) {
+          return failure(error);
+        }
+      },
+      async mset<T>(entries: Array<{ key: string; value: T; ttl?: number }>): Promise<Result<void>> {
+        try {
+          await Promise.all(
+            entries.map(e => cache.set(e.key, e.value, { ttl: e.ttl }))
+          );
+          return success(undefined);
+        } catch (error: any) {
+          return failure(error);
+        }
+      },
+      async exists(key: string): Promise<Result<boolean>> {
+        try {
+          return success(cacheStore.has(key));
+        } catch (error: any) {
+          return failure(error);
+        }
+      },
+      async ttl(key: string): Promise<Result<number>> {
+        try {
+          const item = cacheStore.get(key);
+          if (!item) return success(-1);
+          return success(Math.max(0, Math.floor((item.expiry - Date.now()) / 1000)));
+        } catch (error: any) {
+          return failure(error);
+        }
+      },
+      async keys(pattern: string): Promise<Result<string[]>> {
+        try {
+          const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+          return success(Array.from(cacheStore.keys()).filter(key => regex.test(key)));
+        } catch (error: any) {
+          return failure(error);
+        }
+      },
+      // Additional required methods for ICacheService
+      async getMany<T>(keys: string[]): Promise<Result<Map<string, T>>> {
+        try {
+          const map = new Map<string, T>();
+          for (const key of keys) {
+            const result = await cache.get(key);
+            if (result.success && result.data !== null) {
+              map.set(key, result.data as T);
+            }
+          }
+          return success(map);
+        } catch (error: any) {
+          return failure(error);
+        }
+      },
+      async setMany<T>(entries: Map<string, T>, options?: any): Promise<Result<void>> {
+        try {
+          for (const [key, value] of entries) {
+            await cache.set(key, value, options);
+          }
+          return success(undefined);
+        } catch (error: any) {
+          return failure(error);
+        }
+      },
+      async deleteMany(keys: string[]): Promise<Result<void>> {
+        try {
+          for (const key of keys) {
+            cacheStore.delete(key);
+          }
+          return success(undefined);
+        } catch (error: any) {
+          return failure(error);
+        }
+      },
+      async deleteByPattern(pattern: string): Promise<Result<number>> {
+        try {
+          const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+          let count = 0;
+          for (const key of cacheStore.keys()) {
+            if (regex.test(key)) {
+              cacheStore.delete(key);
+              count++;
+            }
+          }
+          return success(count);
+        } catch (error: any) {
+          return failure(error);
+        }
+      },
+      async deleteByTags(_tags: string[]): Promise<Result<number>> {
+        return success(0); // Tags not implemented in simple cache
+      },
+      async touch(key: string, ttl: number): Promise<Result<void>> {
+        try {
+          const item = cacheStore.get(key);
+          if (item) {
+            item.expiry = Date.now() + (ttl * 1000);
+          }
+          return success(undefined);
+        } catch (error: any) {
+          return failure(error);
+        }
+      },
+      async getEntry(key: string): Promise<Result<any | null>> {
+        try {
+          const item = cacheStore.get(key);
+          if (!item) return success(null);
+          return success({
+            value: item.value,
+            key,
+            createdAt: new Date(),
+            expiresAt: new Date(item.expiry),
+            hits: 0
+          });
+        } catch (error: any) {
+          return failure(error);
+        }
+      },
+      async getStats(): Promise<Result<any>> {
+        return success({
+          hits: 0,
+          misses: 0,
+          sets: cacheStore.size,
+          deletes: 0,
+          evictions: 0,
+          hitRate: 0,
+          keyCount: cacheStore.size
+        });
+      },
+      async warm<T>(entries: Map<string, T>, options?: any): Promise<Result<void>> {
+        return cache.setMany(entries, options);
+      },
+      async invalidate(pattern: string): Promise<Result<number>> {
+        return cache.deleteByPattern(pattern);
+      },
+      async wrap<T>(key: string, fn: () => Promise<T>, options?: any): Promise<Result<T>> {
+        try {
+          const cached = await cache.get(key);
+          if (cached.success && cached.data !== null) {
+            return success(cached.data as T);
+          }
+          const value = await fn();
+          await cache.set(key, value, options);
+          return success(value);
+        } catch (error: any) {
+          return failure(error);
+        }
+      },
+      async getOrSet<T>(key: string, factory: () => Promise<T>, options?: any): Promise<Result<T>> {
+        return cache.wrap(key, factory, options);
+      },
+      // Custom disconnect for cleanup
+      async disconnect(): Promise<void> {
+        // No-op for in-memory cache
+        return Promise.resolve();
+      }
+    };
+    
+    logger.info('In-memory cache initialized (Redis disabled)');
     
     // Create rate limiter
     const baseRateLimiter = new RateLimiter({

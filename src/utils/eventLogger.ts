@@ -27,20 +27,20 @@ export class EventLogger {
 
   private static formatValue(value: string | number | undefined, decimals: number = 18): string {
     if (!value) return 'N/A';
-    
+
     const numValue = typeof value === 'string' ? parseFloat(value) : value;
     const actualValue = numValue / Math.pow(10, decimals);
-    
-    if (actualValue > 1e9) {
-      return `${(actualValue / 1e9).toFixed(4)} B`;
-    } else if (actualValue > 1e6) {
-      return `${(actualValue / 1e6).toFixed(4)} M`;
-    } else if (actualValue > 1e3) {
-      return `${(actualValue / 1e3).toFixed(4)} K`;
+
+    // For larger values, show the full number with commas for better readability
+    if (actualValue >= 1000) {
+      return actualValue.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
     } else if (actualValue < 0.0001 && actualValue > 0) {
       return actualValue.toExponential(4);
     }
-    
+
     return actualValue.toFixed(6);
   }
 

@@ -188,7 +188,7 @@ async function listWebhooks(detailed = false) {
  * Create a new webhook
  */
 async function createWebhook(options) {
-  const { url, event = 'wallet_activity', addresses = [], network = 'base-mainnet', secret = 'webhook-secret' } = options;
+  const { url, event = 'wallet_activity', addresses = [], network = 'base-mainnet' } = options;
   
   if (!url) {
     console.error(`${colors.red}❌ Notification URL is required${colors.reset}`);
@@ -198,26 +198,51 @@ async function createWebhook(options) {
   
   console.log(`\n${colors.blue}🔨 Creating webhook...${colors.reset}\n`);
   
+  // Build webhook data matching CDP's exact requirements
   const webhookData = {
     network_id: network,
-    event_type: event,
     notification_uri: url,
-    signature_header: secret
+    event_type: event
   };
   
-  if (addresses.length > 0) {
-    webhookData.event_type_filter = {
-      addresses: addresses
-    };
+  // Handle event_type_filter based on event type
+  if (event === 'wallet_activity') {
+    // wallet_activity REQUIRES event_type_filter with addresses array
+    if (addresses.length > 0) {
+      webhookData.event_type_filter = {
+        addresses: addresses.map(addr => addr.toLowerCase().trim())
+      };
+    } else {
+      // wallet_activity requires at least one address
+      console.log(`${colors.red}❌ wallet_activity requires at least one address to monitor${colors.reset}`);
+      console.log(`${colors.yellow}Please provide addresses or use 'erc20_transfer' event type instead${colors.reset}`);
+      return;
+    }
+  } else if (event === 'erc20_transfer' || event === 'erc721_transfer' || event === 'erc1155_transfer') {
+    // Token transfer events can optionally filter by addresses
+    if (addresses.length > 0) {
+      webhookData.event_type_filter = {
+        addresses: addresses.map(addr => addr.toLowerCase().trim())
+      };
+    }
+    // If no addresses, it will monitor all transfers on the network
   }
+  // 'transaction' and 'smart_contract_event' types don't use address filters
   
   console.log(`  ${colors.gray}Network:${colors.reset} ${network}`);
-  console.log(`  ${colors.gray}Event Type:${colors.reset} ${event}`);
+  console.log(`  ${colors.gray}Event Type:${colors.reset} ${webhookData.event_type}`);
   console.log(`  ${colors.gray}URL:${colors.reset} ${url}`);
-  if (addresses.length > 0) {
-    console.log(`  ${colors.gray}Addresses:${colors.reset} ${addresses.length} address(es)`);
+  if (webhookData.event_type_filter?.addresses) {
+    console.log(`  ${colors.gray}Addresses:${colors.reset} ${webhookData.event_type_filter.addresses.length} address(es)`);
   }
   console.log('');
+  
+  // Debug: Show what we're sending
+  if (process.env.DEBUG) {
+    console.log(`${colors.gray}Debug - Payload:${colors.reset}`);
+    console.log(JSON.stringify(webhookData, null, 2));
+    console.log('');
+  }
   
   try {
     const response = await makeRequest('POST', '/platform/v1/webhooks', webhookData);
@@ -345,7 +370,7 @@ async function activateWebhook(webhookId) {
   
   try {
     const response = await makeRequest('PUT', `/platform/v1/webhooks/${webhookId}`, {
-      status: 'ACTIVE'
+      status: 'active'  // CDP API expects lowercase
     });
     
     console.log(`${colors.green}✅ Webhook activated successfully!${colors.reset}`);
@@ -371,7 +396,7 @@ async function deactivateWebhook(webhookId) {
   
   try {
     const response = await makeRequest('PUT', `/platform/v1/webhooks/${webhookId}`, {
-      status: 'INACTIVE'
+      status: 'inactive'  // CDP API expects lowercase
     });
     
     console.log(`${colors.green}✅ Webhook deactivated successfully!${colors.reset}`);
