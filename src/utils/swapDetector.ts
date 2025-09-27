@@ -21,6 +21,8 @@ const DEX_ROUTERS: Record<string, string> = {
   '0x6BDED42c6DA8FBf0d2bA55B2fa120C5e0c8D7891': 'SushiSwap',
   '0x8cFe327CEc66d1C090Dd72bd0FF11d690C33a2Eb': 'PancakeSwap V3',
   '0x1B8eea9315bE495187D873DA7773a874545D9D48': 'Velodrome',
+  '0x6e4141d33021b52c91c28608403db4a0ffb50ec6': 'KyberSwap',
+  '0x6131B5fae19EA4f9D964eAc0408E4408b66337b5': 'KyberSwap Aggregator',
 };
 
 const SWAP_METHOD_PATTERNS = [

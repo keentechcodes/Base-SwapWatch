@@ -5,6 +5,12 @@ import { WebhookRequest, captureRawBody, verifyWebhookSignature, validateWebhook
 // import { debugWebhookSignature } from './middleware/webhookAuthDebug'; // Fixed - CDP uses direct secret
 import { EventLogger } from './utils/eventLogger';
 import { WebhookEvent, WebhookResponse } from './types/webhook';
+import { bootstrap } from './services/enrichment/bootstrap';
+import { createWebhookProcessor } from './services/enrichment/webhookProcessor';
+import { identifySwapEvent } from './utils/swapDetector';
+
+// Global webhook processor instance
+let webhookProcessor: any = null;
 
 // Load environment variables
 dotenv.config();
@@ -84,12 +90,34 @@ app.post('/webhook',
   },
   verifyWebhookSignature, // Fixed to handle CDP's direct secret format
   validateWebhookPayload,
-  (req: Request, res: Response) => {
+  async (req: Request, res: Response) => {
     try {
       const event = req.body as WebhookEvent;
       
-      // Log the event with formatted output
+      // Log the basic event first
       EventLogger.logEvent(event);
+
+      // Check if it's a swap event and process with enrichment
+      if (identifySwapEvent(event) && webhookProcessor) {
+        try {
+          console.log(chalk.yellow('🔄 Processing swap for enrichment...'));
+          const result = await webhookProcessor.processEvent(event);
+          
+          if (result.success && result.data?.enrichedData) {
+            // Log the enriched swap event with all the market data
+            EventLogger.logEnrichedSwapEvent(result.data.enrichedData);
+          } else if (!result.success) {
+            console.log(chalk.gray('ℹ️  Enrichment failed:', result.error));
+          } else {
+            console.log(chalk.gray('ℹ️  Enrichment returned no data (might not be a swap)'));
+          }
+        } catch (enrichmentError) {
+          console.error(chalk.red('⚠️  Enrichment failed:'), enrichmentError);
+          // Continue processing even if enrichment fails
+        }
+      } else if (identifySwapEvent(event) && !webhookProcessor) {
+        console.log(chalk.yellow('⚠️  Swap detected but enrichment not initialized'));
+      }
 
       // Prepare response
       const response: WebhookResponse = {
@@ -134,6 +162,46 @@ const PORT = process.env.PORT || 3000;
 let server: any;
 
 if (process.env.NODE_ENV !== 'test') {
+  // Initialize enrichment services on startup
+  bootstrap({
+    redis: {
+      host: process.env.REDIS_HOST || 'localhost',
+      port: parseInt(process.env.REDIS_PORT || '6379'),
+      password: process.env.REDIS_PASSWORD,
+      db: parseInt(process.env.REDIS_DB || '0')
+    },
+    apis: {
+      baseScanApiKey: process.env.ETHERSCAN_API_KEY,
+      moralisApiKey: process.env.MORALIS_API_KEY,
+      enableMoralis: !!process.env.MORALIS_API_KEY
+    }
+  })
+    .then((bootstrapResult) => {
+      if (bootstrapResult.success && bootstrapResult.data) {
+        // Create the webhook processor with the bootstrapped services
+        webhookProcessor = createWebhookProcessor(
+          bootstrapResult.data.services.enricher,
+          bootstrapResult.data.infrastructure.logger,
+          {
+            enableEnrichment: true,
+            enrichmentTimeout: 3000,
+            logEnrichedEvents: true
+          }
+        );
+        console.log(chalk.green('✅ Enrichment services initialized'));
+      } else {
+        const errorMessage = !bootstrapResult.success && 'error' in bootstrapResult 
+          ? bootstrapResult.error 
+          : 'Unknown error';
+        console.error(chalk.red('⚠️  Failed to initialize enrichment services:'), errorMessage);
+        console.log(chalk.yellow('   The server will continue but enrichment may not work'));
+      }
+    })
+    .catch((error: any) => {
+      console.error(chalk.red('⚠️  Failed to initialize enrichment services:'), error);
+      console.log(chalk.yellow('   The server will continue but enrichment may not work'));
+    });
+
   server = app.listen(PORT, () => {
     console.log(chalk.green.bold(`🚀 SwapWatch Webhook Demo Server`));
     console.log(chalk.blue(`📡 Listening on port ${PORT}`));
@@ -144,6 +212,13 @@ if (process.env.NODE_ENV !== 'test') {
       console.log(chalk.yellow.bold('\n⚠️  Warning: WEBHOOK_SECRET not configured'));
       console.log(chalk.yellow('   Please set WEBHOOK_SECRET in your .env file'));
     }
+
+    // Log API configuration status
+    console.log(chalk.cyan('\n📊 API Configuration:'));
+    console.log(`  ${process.env.ETHERSCAN_API_KEY ? chalk.green('✅') : chalk.red('❌')} Etherscan API`);
+    console.log(`  ${process.env.MORALIS_API_KEY ? chalk.green('✅') : chalk.yellow('⚠️')} Moralis API (optional)`);
+    console.log(`  ${process.env.REDIS_HOST ? chalk.green('✅') : chalk.yellow('⚠️')} Redis Cache`);
+    console.log(`  ${chalk.green('✅')} DexScreener (no key required)`);
   });
 }
 
