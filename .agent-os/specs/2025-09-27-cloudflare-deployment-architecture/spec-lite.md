@@ -1,0 +1,3 @@
+# Spec Summary (Lite)
+
+Deploy SwapWatch entirely on Cloudflare's edge infrastructure using Pages for the frontend, Workers for API endpoints, and Durable Objects for room state management with native WebSocket support. This architecture eliminates external dependencies like Redis, provides global edge performance, operates within the free tier for under 100 DAUs, and enables instant deployment through GitHub integration with zero operational overhead.
