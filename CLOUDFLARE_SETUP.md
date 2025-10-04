@@ -4,104 +4,112 @@ This guide walks you through setting up your Cloudflare infrastructure for SwapW
 
 ## Prerequisites
 
-- [ ] Email address for Cloudflare account
-- [ ] Credit card (for domain registration, ~$10/year)
-- [ ] GitHub repository (already have: keentechcodes/Base-SwapWatch)
+- [x] Email address for Cloudflare account (mayuga.keenan@gmail.com)
+- [x] Credit card (for domain registration, ~$10/year)
+- [x] GitHub repository (keentechcodes/Base-SwapWatch)
 
 ## Step-by-Step Setup
 
-### 1. Create Cloudflare Account
+### 1. Create Cloudflare Account ✅
 
-1. Go to [https://dash.cloudflare.com/sign-up](https://dash.cloudflare.com/sign-up)
-2. Enter your email and create a strong password
-3. Verify your email address via the confirmation link
-4. Complete the onboarding survey (select "Personal" for account type)
+1. ✅ Go to [https://dash.cloudflare.com/sign-up](https://dash.cloudflare.com/sign-up)
+2. ✅ Enter your email and create a strong password
+3. ✅ Verify your email address via the confirmation link
+4. ✅ Complete the onboarding survey (select "Personal" for account type)
 
-### 2. Domain Registration
+### 2. Domain Registration ✅
 
-1. Navigate to **Registrar** in the Cloudflare dashboard
-2. Search for your desired domain (suggestions):
-   - `swapwatch.app` (recommended)
-   - `swapwatch.xyz`
-   - `baseswapwatch.com`
-   - `swaptracker.app`
-3. Add to cart and complete purchase
-4. Domain will be automatically configured with Cloudflare nameservers
+1. ✅ Navigate to **Registrar** in the Cloudflare dashboard
+2. ✅ Domain registered: **swapwatch.app**
+3. ✅ Purchase completed
+4. ✅ Domain automatically configured with Cloudflare nameservers
 
-### 3. DNS Configuration
+**Status:** DNS configured with Cloudflare nameservers (jakub.ns.cloudflare.com)
 
-Once domain is registered, Cloudflare automatically:
-- Sets up nameservers
-- Enables Universal SSL (free)
-- Configures DNSSEC
+### 3. DNS Configuration ✅
 
-No additional DNS configuration needed initially.
+✅ Domain is registered, Cloudflare automatically:
+- ✅ Sets up nameservers (jakub.ns.cloudflare.com, dns.cloudflare.com)
+- ✅ Enables Universal SSL (free)
+- ✅ Configures DNSSEC
 
-### 4. Security Settings
+**Note:** A records will be created automatically when Workers/Pages are deployed.
 
-1. Go to **SSL/TLS** → **Overview**
-   - Ensure mode is set to "Full (strict)"
-2. Go to **Security** → **Settings**
-   - Enable "Always Use HTTPS"
-   - Enable "Automatic HTTPS Rewrites"
-3. Go to **Security** → **Bots**
-   - Keep "Bot Fight Mode" enabled
+### 4. Security Settings ✅
 
-### 5. Cloudflare Pages Setup
+1. ✅ Go to **SSL/TLS** → **Overview**
+   - ✅ Mode set to "Full (strict)"
+2. ✅ Go to **SSL/TLS** → **Edge Certificates**
+   - ✅ Universal SSL: Active
+   - ✅ Always Use HTTPS: ON
+   - ✅ Automatic HTTPS Rewrites: ON
+3. ✅ Go to **Security** → **Settings**
+   - ✅ Security Level: Medium/High
+   - ✅ Browser Integrity Check: ON
+4. ✅ Go to **Security** → **Bots**
+   - ✅ Bot Fight Mode: ON
 
-1. Go to **Workers & Pages** → **Create Application**
-2. Select **Pages** tab
-3. Click **Connect to Git**
-4. Authorize GitHub and select `keentechcodes/Base-SwapWatch`
-5. Configure build settings:
-   - **Production branch**: `main`
+### 5. Cloudflare Pages Setup ✅
+
+1. ✅ Go to **Workers & Pages** → **Create Application**
+2. ✅ Select **Pages** tab
+3. ✅ Click **Connect to Git**
+4. ✅ Authorize GitHub and select `keentechcodes/Base-SwapWatch`
+5. ✅ Configure build settings:
+   - **Production branch**: `main` (paused until ready)
    - **Build command**: `pnpm build`
    - **Build output directory**: `.next`
    - **Root directory**: `/` (will update when we move UI)
-6. Add environment variables:
+6. ✅ Add environment variables:
    ```
    NODE_VERSION=20
    NEXT_PUBLIC_API_URL=https://api.swapwatch.app
    NEXT_PUBLIC_WS_URL=wss://api.swapwatch.app
    ```
-7. Click **Save and Deploy**
+7. ✅ Saved (auto-deploy paused during development)
 
-### 6. Workers Setup
+**Note:** Build failures expected on feature branch - will deploy when ready.
 
-1. In **Workers & Pages**, click **Create Application**
-2. Select **Workers** tab
-3. Name it `swapwatch-api`
-4. Select **Start from scratch**
-5. We'll deploy code later with Wrangler
+### 6. Workers Setup ⏭️
 
-### 7. API Keys and Tokens
+**SKIPPED** - We'll deploy Workers via Wrangler CLI from code (see Task 2).
 
-1. Go to **My Profile** → **API Tokens**
-2. Click **Create Token**
-3. Use template: "Edit Cloudflare Workers"
-4. Permissions needed:
-   - Account: Cloudflare Workers Scripts:Edit
-   - Account: Cloudflare Pages:Edit
-   - Zone: DNS:Edit
-5. Save the token securely for CI/CD
+Dashboard Worker creation not needed for custom Durable Objects implementation.
 
-## Environment Setup Verification
+### 7. API Keys and Tokens ✅
 
-Run these commands to verify your setup:
+1. ✅ Go to **My Profile** → **API Tokens**
+2. ✅ Click **Create Token**
+3. ✅ Use template: "Edit Cloudflare Workers"
+4. ✅ Permissions configured:
+   - ✅ Account: Workers Scripts:Edit
+   - ✅ Account: Workers KV Storage:Edit
+   - ✅ Account: Cloudflare Pages:Edit
+   - ✅ Zone: Workers Routes:Edit
+5. ✅ Token saved securely
+6. ✅ Exported as $CLOUDFLARE_API environment variable
+7. ✅ Verified with curl test
+
+## Environment Setup Verification ✅
 
 ```bash
 # Install Wrangler globally
-pnpm add -g wrangler
+✅ pnpm add -g wrangler
 
 # Login to Cloudflare
-wrangler login
+✅ wrangler login
 
 # Verify authentication
-wrangler whoami
+✅ wrangler whoami
+# Account ID: e1e56a9592128ebad1f2b3a1fffda26b
+# Email: mayuga.keenan@gmail.com
 
-# List your zones (domains)
-wrangler zones list
+# Verify DNS configuration
+✅ dig @1.1.1.1 swapwatch.app
+# Nameservers: jakub.ns.cloudflare.com, dns.cloudflare.com
 ```
+
+**Status:** All verification complete! ✅
 
 ## Next Steps
 
