@@ -40,3 +40,18 @@ pnpm-lock.yaml
 # Ngrok
 ngrok.exe
 ngrok
+
+# Cloudflare
+.wrangler/
+.dev.vars.local
+.mf/
+
+# Vercel
+.vercel
+
+# Next.js
+.next/
+out/
+
+# Zone Identifier files (Windows)
+*.Zone.Identifier

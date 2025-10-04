@@ -5,12 +5,18 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon --exec ts-node src/server.ts",
+    "dev:worker": "wrangler dev src/worker/index.ts",
+    "dev:pages": "next dev",
     "start": "node dist/server.js",
     "build": "node scripts/build.js",
+    "build:worker": "wrangler deploy --dry-run",
+    "build:pages": "next build",
+    "deploy:worker": "wrangler deploy",
+    "deploy:pages": "vercel --prod",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "clean": "rm -rf dist coverage",
+    "clean": "rm -rf dist coverage .next .vercel",
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
     "validate-apis": "node scripts/validate-apis.js",
@@ -21,7 +27,10 @@
     "webhook:delete": "node scripts/cdp-webhook-manager.js delete",
     "webhook:monitor": "node scripts/cdp-webhook-manager.js monitor",
     "webhook:activate": "node scripts/cdp-webhook-manager.js activate",
-    "webhook:deactivate": "node scripts/cdp-webhook-manager.js deactivate"
+    "webhook:deactivate": "node scripts/cdp-webhook-manager.js deactivate",
+    "cf:login": "wrangler login",
+    "cf:whoami": "wrangler whoami",
+    "cf:tail": "wrangler tail"
   },
   "keywords": [],
   "author": "",
@@ -39,6 +48,8 @@
     "redis": "^5.8.2"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.16",
+    "@cloudflare/workers-types": "^4.20250927.0",
     "@types/express": "^5.0.3",
     "@types/ioredis": "^4.28.10",
     "@types/jest": "^30.0.0",
@@ -49,6 +60,8 @@
     "supertest": "^7.1.4",
     "ts-jest": "^29.4.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vercel": "^48.1.6",
+    "wrangler": "^4.40.2"
   }
 }
