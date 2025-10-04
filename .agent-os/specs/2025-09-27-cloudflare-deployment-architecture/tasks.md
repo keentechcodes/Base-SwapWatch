@@ -7,15 +7,15 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
 
 ## Tasks
 
-- [ ] 1. Set up Cloudflare account and domain infrastructure
-  - [ ] 1.1 Write tests for domain verification and DNS configuration
-  - [ ] 1.2 Create Cloudflare account and verify email
-  - [ ] 1.3 Register domain through Cloudflare Registrar (swapwatch.app or similar)
-  - [ ] 1.4 Configure DNS settings with Cloudflare nameservers
-  - [ ] 1.5 Enable Universal SSL and configure security settings
-  - [ ] 1.6 Set up Cloudflare Pages project linked to GitHub repository
-  - [ ] 1.7 Configure environment variables in Cloudflare dashboard
-  - [ ] 1.8 Verify domain resolves and SSL certificate is active
+- [x] 1. Set up Cloudflare account and domain infrastructure
+  - [x] 1.1 Write tests for domain verification and DNS configuration
+  - [x] 1.2 Create Cloudflare account and verify email
+  - [x] 1.3 Register domain through Cloudflare Registrar (swapwatch.app)
+  - [x] 1.4 Configure DNS settings with Cloudflare nameservers
+  - [x] 1.5 Enable Universal SSL and configure security settings
+  - [x] 1.6 Set up Cloudflare Pages project linked to GitHub repository
+  - [x] 1.7 Configure environment variables in Cloudflare dashboard
+  - [x] 1.8 Verify domain resolves and SSL certificate is active
 
 - [ ] 2. Implement Durable Objects for room management
   - [ ] 2.1 Write tests for Durable Object lifecycle and storage operations
