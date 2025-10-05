@@ -487,6 +487,103 @@ const processData = (data: Data): ProcessedData => { };
 
 ---
 
+## Edge Platform Constraints
+
+### When Platform Requires Classes
+
+Some platforms (Cloudflare Durable Objects, React Components, etc.) **require** classes. In these cases:
+
+**✅ DO:**
+- Keep the class as thin as possible
+- Extract ALL business logic into pure functions
+- Use the class only as a thin wrapper/orchestrator
+- Delegate to factory functions and pure functions
+
+**Example: Cloudflare Durable Objects**
+
+```typescript
+// ❌ BAD - Business logic in class
+export class RoomDurableObject {
+  async fetch(request: Request): Promise<Response> {
+    const body = await request.json();
+
+    // Validation logic in class (BAD)
+    if (!body.address.match(/^0x[a-fA-F0-9]{40}$/)) {
+      return new Response('Invalid address', { status: 400 });
+    }
+
+    // Storage logic in class (BAD)
+    const wallets = await this.state.storage.get('wallets') || [];
+    wallets.push(body.address);
+    await this.state.storage.put('wallets', wallets);
+
+    return new Response('OK');
+  }
+}
+
+// ✅ GOOD - Thin class, pure functions for logic
+// src/worker/room/validation.ts
+export const validateWalletAddress = (address: string): Result<string> => {
+  if (!WALLET_ADDRESS_REGEX.test(address)) {
+    return failure(new ValidationError('Invalid address'));
+  }
+  return success(address);
+};
+
+// src/worker/room/storage.ts
+export const createStorageOperations = (storage: DurableObjectStorage) => ({
+  addWallet: async (address: string): Promise<Result<void>> => {
+    const wallets = await storage.get('wallets') || [];
+    wallets.push(address);
+    await storage.put('wallets', wallets);
+    return success(undefined);
+  }
+});
+
+// src/worker/room/handlers.ts
+export const createRoomHandlers = (deps: { storage: StorageOps }) => ({
+  addWallet: async (request: AddWalletRequest): Promise<Result<void>> => {
+    const validation = validateWalletAddress(request.address);
+    if (!validation.success) return validation;
+
+    return deps.storage.addWallet(request.address);
+  }
+});
+
+// src/worker/RoomDurableObject.ts - THIN wrapper
+export class RoomDurableObject {
+  private handlers: ReturnType<typeof createRoomHandlers>;
+
+  constructor(state: DurableObjectState, env: Env) {
+    const storage = createStorageOperations(state.storage);
+    this.handlers = createRoomHandlers({ storage });
+  }
+
+  async fetch(request: Request): Promise<Response> {
+    // Just routing - no business logic
+    const body = await request.json();
+    const result = await this.handlers.addWallet(body);
+    return toResponse(result);
+  }
+}
+```
+
+### File Organization for Edge Constraints
+
+```
+src/worker/
+├── RoomDurableObject.ts      # THIN class (platform requirement)
+├── room/                       # Pure business logic
+│   ├── validation.ts           # Pure validators
+│   ├── storage.ts              # Storage factory functions
+│   ├── handlers.ts             # Request handler factories
+│   ├── websocket.ts            # WebSocket logic
+│   └── telegram.ts             # Notification formatting
+└── types.ts                    # Shared types
+```
+
+---
+
 ## Conclusion
 
 The hybrid approach gives us the best of both worlds:
@@ -494,5 +591,6 @@ The hybrid approach gives us the best of both worlds:
 - **Flexibility** from functional business logic
 - **Testability** through dependency injection
 - **Maintainability** through clear separation of concerns
+- **Platform Compatibility** when classes are required (kept minimal)
 
 This standard ensures consistent, high-quality code across the Base SwapWatch project while leveraging the strengths of both programming paradigms.
