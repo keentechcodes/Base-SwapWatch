@@ -27,15 +27,15 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
   - [x] 2.7 Create RPC methods for inter-service communication
   - [x] 2.8 Verify all Durable Object tests pass locally with Miniflare
 
-- [ ] 3. Deploy Workers API and webhook processing
-  - [ ] 3.1 Write tests for API endpoints and webhook signature verification
-  - [ ] 3.2 Create main Worker script with routing logic
-  - [ ] 3.3 Implement Coinbase webhook handler with signature verification
-  - [ ] 3.4 Add room CRUD operations (create, join, manage wallets)
-  - [ ] 3.5 Configure Worker bindings for Durable Objects namespace
-  - [ ] 3.6 Deploy Worker to Cloudflare with wrangler deploy
-  - [ ] 3.7 Set up custom routes for api.swapwatch.app subdomain
-  - [ ] 3.8 Verify webhook processing and API endpoints work in production
+- [x] 3. Deploy Workers API and webhook processing
+  - [x] 3.1 Write tests for API endpoints and webhook signature verification
+  - [x] 3.2 Create main Worker script with routing logic
+  - [x] 3.3 Implement Coinbase webhook handler with signature verification
+  - [x] 3.4 Add room CRUD operations (create, join, manage wallets)
+  - [x] 3.5 Configure Worker bindings for Durable Objects namespace
+  - [x] 3.6 Deploy Worker to Cloudflare with wrangler deploy
+  - [x] 3.7 Set up custom routes for api.swapwatch.app subdomain
+  - [x] 3.8 Verify webhook processing and API endpoints work in production
 
 - [ ] 4. Migrate and deploy frontend to Cloudflare Pages
   - [ ] 4.1 Write tests for edge runtime compatibility
