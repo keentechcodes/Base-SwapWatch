@@ -17,15 +17,15 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
   - [x] 1.7 Configure environment variables in Cloudflare dashboard
   - [x] 1.8 Verify domain resolves and SSL certificate is active
 
-- [ ] 2. Implement Durable Objects for room management
-  - [ ] 2.1 Write tests for Durable Object lifecycle and storage operations
-  - [ ] 2.2 Install Wrangler CLI and initialize Workers project with pnpm
-  - [ ] 2.3 Create RoomDurableObject class with WebSocket handler
-  - [ ] 2.4 Implement storage schema for wallets, labels, and configuration
-  - [ ] 2.5 Add WebSocket hibernation API for cost-effective connections
-  - [ ] 2.6 Implement room expiration using alarm API (24-hour lifecycle)
-  - [ ] 2.7 Create RPC methods for inter-service communication
-  - [ ] 2.8 Verify all Durable Object tests pass locally with Miniflare
+- [x] 2. Implement Durable Objects for room management
+  - [x] 2.1 Write tests for Durable Object lifecycle and storage operations
+  - [x] 2.2 Install Wrangler CLI and initialize Workers project with pnpm
+  - [x] 2.3 Create RoomDurableObject class with WebSocket handler
+  - [x] 2.4 Implement storage schema for wallets, labels, and configuration
+  - [x] 2.5 Add WebSocket hibernation API for cost-effective connections
+  - [x] 2.6 Implement room expiration using alarm API (24-hour lifecycle)
+  - [x] 2.7 Create RPC methods for inter-service communication
+  - [x] 2.8 Verify all Durable Object tests pass locally with Miniflare
 
 - [ ] 3. Deploy Workers API and webhook processing
   - [ ] 3.1 Write tests for API endpoints and webhook signature verification

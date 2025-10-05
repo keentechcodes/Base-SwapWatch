@@ -1,11 +1,10 @@
 /**
- * Room business logic exports
- * Pure functions following functional programming paradigm
+ * Room module barrel export
+ * Aggregates all room-related functional modules
  */
 
-export * from './validation';
-export * from './storage';
-export * from './websocket';
-export * from './telegram';
-export * from './handlers';
-export * from './rpc';
+export * from './validators';
+export * from './storage-ops';
+export * from './websocket-manager';
+export * from './request-handlers';
+export * from './telegram-formatter';
