@@ -13,7 +13,7 @@ export async function handleAddWallet(
   env: Env,
   roomCode: string,
   walletAddress: string
-): Promise<Response> {
+): Promise<globalThis.Response> {
   try {
     // Get Durable Object stub
     const roomId = env.ROOMS.idFromName(roomCode);
@@ -34,7 +34,7 @@ export async function handleAddWallet(
       await onWalletAdded(env.ROOM_INDEX, walletAddress, roomCode, webhookConfig);
     }
 
-    return response;
+    return response as unknown as globalThis.Response;
   } catch (error) {
     console.error('Failed to add wallet:', error);
     return new Response(JSON.stringify({ error: 'Failed to add wallet' }), {
@@ -52,7 +52,7 @@ export async function handleRemoveWallet(
   env: Env,
   roomCode: string,
   walletAddress: string
-): Promise<Response> {
+): Promise<globalThis.Response> {
   try {
     // Get Durable Object stub
     const roomId = env.ROOMS.idFromName(roomCode);
@@ -71,7 +71,7 @@ export async function handleRemoveWallet(
       await onWalletRemoved(env.ROOM_INDEX, walletAddress, roomCode, webhookConfig);
     }
 
-    return response;
+    return response as unknown as globalThis.Response;
   } catch (error) {
     console.error('Failed to remove wallet:', error);
     return new Response(JSON.stringify({ error: 'Failed to remove wallet' }), {
@@ -89,7 +89,7 @@ export async function handleCreateRoom(
   env: Env,
   roomCode: string,
   config: any
-): Promise<Response> {
+): Promise<globalThis.Response> {
   try {
     // Get Durable Object stub
     const roomId = env.ROOMS.idFromName(roomCode);
@@ -102,7 +102,7 @@ export async function handleCreateRoom(
       body: JSON.stringify(config),
     });
 
-    return await roomStub.fetch(request as never);
+    return await roomStub.fetch(request as never) as unknown as globalThis.Response;
   } catch (error) {
     console.error('Failed to create room:', error);
     return new Response(JSON.stringify({ error: 'Failed to create room' }), {

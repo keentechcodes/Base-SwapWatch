@@ -79,7 +79,7 @@ async function getAllTrackedWallets(kv: KVNamespace): Promise<string[]> {
 
   for (const key of walletKeys.keys) {
     // Extract wallet address from key (wallet:0x123... -> 0x123...)
-    const walletAddress = key.key.replace('wallet:', '');
+    const walletAddress = key.name.replace('wallet:', '');
     uniqueWallets.add(walletAddress);
   }
 

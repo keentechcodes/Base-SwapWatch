@@ -36,6 +36,7 @@ export default {
       // Room management endpoints
       if (path.startsWith('/room/')) {
         const roomCode = extractRoomCode(path);
+        const method = request.method;
 
         if (!roomCode) {
           return new Response(JSON.stringify({ error: 'Invalid room code' }), {
@@ -51,26 +52,26 @@ export default {
         if (path.includes('/wallets') && method === 'POST') {
           const body = await request.json() as any;
           const response = await handleAddWallet(env, roomCode, body.address);
-          return addCorsHeaders(response, corsHeaders);
+          return addCorsHeaders(response as unknown as Response, corsHeaders);
         }
 
         if (path.match(/\/wallets\/[^/]+$/) && method === 'DELETE') {
           const walletAddress = path.split('/wallets/')[1];
           const response = await handleRemoveWallet(env, roomCode, walletAddress);
-          return addCorsHeaders(response, corsHeaders);
+          return addCorsHeaders(response as unknown as Response, corsHeaders);
         }
 
         if (path.endsWith('/create') && method === 'POST') {
           const body = await request.json() as any;
           const response = await handleCreateRoom(env, roomCode, body);
-          return addCorsHeaders(response, corsHeaders);
+          return addCorsHeaders(response as unknown as Response, corsHeaders);
         }
 
         // For other room operations, forward directly to Durable Object
         const roomId = env.ROOMS.idFromName(roomCode);
         const roomStub = env.ROOMS.get(roomId);
         const response = await roomStub.fetch(request as never);
-        return addCorsHeaders(response, corsHeaders);
+        return addCorsHeaders(response as unknown as Response, corsHeaders);
       }
 
       // Webhook endpoint (Coinbase CDP)
