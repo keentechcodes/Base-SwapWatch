@@ -9,7 +9,7 @@
     "dev:pages": "next dev",
     "start": "node dist/server.js",
     "build": "node scripts/build.js",
-    "build:worker": "wrangler deploy --dry-run",
+    "build:worker": "tsc --noEmit src/worker/index.ts",
     "build:pages": "next build",
     "deploy:worker": "wrangler deploy",
     "deploy:pages": "vercel --prod",

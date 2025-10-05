@@ -5,32 +5,50 @@ main = "src/worker/index.ts"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
-# Environment configuration
-[env.production]
-vars = { ENVIRONMENT = "production" }
-
-[env.staging]
-vars = { ENVIRONMENT = "staging" }
-
-# Durable Objects binding
+# Durable Objects binding (top level - default environment)
 [[durable_objects.bindings]]
 name = "ROOMS"
 class_name = "RoomDurableObject"
-script_name = "swapwatch-api"
 
-# KV Namespace for room index
-[[kv_namespaces]]
+# Durable Objects migrations (using new_sqlite_classes for free tier)
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RoomDurableObject"]
+
+# Environment configuration - Staging
+[env.staging]
+vars = { ENVIRONMENT = "staging" }
+
+[[env.staging.durable_objects.bindings]]
+name = "ROOMS"
+class_name = "RoomDurableObject"
+
+[[env.staging.kv_namespaces]]
 binding = "ROOM_INDEX"
-id = "your-kv-namespace-id" # Will be created on first deploy
+id = "41030dc60b6041d4926aa592336b4522"
 
-# Routes (will activate once DNS propagates and Worker is deployed)
-# [[routes]]
-# pattern = "api.swapwatch.app/*"
-# zone_name = "swapwatch.app"
+# Staging route (using workers.dev subdomain for now)
+# route = { pattern = "staging-api.swapwatch.app/*", zone_name = "swapwatch.app" }
+
+# Environment configuration - Production
+[env.production]
+vars = { ENVIRONMENT = "production" }
+
+[[env.production.durable_objects.bindings]]
+name = "ROOMS"
+class_name = "RoomDurableObject"
+
+[[env.production.kv_namespaces]]
+binding = "ROOM_INDEX"
+id = "bb200532d7c04a3fa9110a9fb2d7d294"
+
+# Production route
+# route = { pattern = "api.swapwatch.app/*", zone_name = "swapwatch.app" }
 
 # Build configuration
-[build]
-command = "pnpm build:worker"
+# No custom build needed - TypeScript is handled by wrangler automatically
+# [build]
+# command = "pnpm build:worker"
 
 # Development settings
 [dev]
