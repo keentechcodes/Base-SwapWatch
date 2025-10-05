@@ -9,6 +9,10 @@ export interface Env {
   DEXSCREENER_API_KEY?: string;
   BASESCAN_API_KEY?: string;
   ENVIRONMENT?: 'production' | 'staging' | 'development';
+  // CDP Webhook Management (optional for dynamic filter updates)
+  CDP_WEBHOOK_ID?: string;
+  CDP_API_KEY_NAME?: string;
+  CDP_API_KEY_PRIVATE_KEY?: string;
 }
 
 // Room storage schema

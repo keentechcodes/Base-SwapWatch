@@ -44,29 +44,33 @@ export default {
           });
         }
 
-        // Get Durable Object stub for this room
+        // Import room API handlers
+        const { handleAddWallet, handleRemoveWallet, handleCreateRoom } = await import('./room-api');
+
+        // Special handling for wallet operations to maintain index
+        if (path.includes('/wallets') && method === 'POST') {
+          const body = await request.json() as any;
+          const response = await handleAddWallet(env, roomCode, body.address);
+          return addCorsHeaders(response, corsHeaders);
+        }
+
+        if (path.match(/\/wallets\/[^/]+$/) && method === 'DELETE') {
+          const walletAddress = path.split('/wallets/')[1];
+          const response = await handleRemoveWallet(env, roomCode, walletAddress);
+          return addCorsHeaders(response, corsHeaders);
+        }
+
+        if (path.endsWith('/create') && method === 'POST') {
+          const body = await request.json() as any;
+          const response = await handleCreateRoom(env, roomCode, body);
+          return addCorsHeaders(response, corsHeaders);
+        }
+
+        // For other room operations, forward directly to Durable Object
         const roomId = env.ROOMS.idFromName(roomCode);
         const roomStub = env.ROOMS.get(roomId);
-
-        // Forward request to Durable Object
-        // Type assertion needed due to Cloudflare Workers vs Node.js type differences
         const response = await roomStub.fetch(request as never);
-
-        // Add CORS headers to response
-        const responseHeaders = new Headers();
-        response.headers.forEach((value: string, key: string) => {
-          responseHeaders.set(key, value);
-        });
-
-        Object.entries(corsHeaders).forEach(([key, value]) => {
-          responseHeaders.set(key, value);
-        });
-
-        return new Response(response.body, {
-          status: response.status,
-          statusText: response.statusText,
-          headers: responseHeaders,
-        });
+        return addCorsHeaders(response, corsHeaders);
       }
 
       // Webhook endpoint (Coinbase CDP)
@@ -108,6 +112,26 @@ function extractRoomCode(path: string): string | null {
 }
 
 /**
+ * Add CORS headers to a response
+ */
+function addCorsHeaders(response: Response, corsHeaders: Record<string, string>): Response {
+  const responseHeaders = new Headers();
+  response.headers.forEach((value: string, key: string) => {
+    responseHeaders.set(key, value);
+  });
+
+  Object.entries(corsHeaders).forEach(([key, value]) => {
+    responseHeaders.set(key, value);
+  });
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: responseHeaders,
+  });
+}
+
+/**
  * Handle Coinbase webhook and broadcast to relevant rooms
  */
 async function handleCoinbaseWebhook(request: Request, env: Env): Promise<Response> {
@@ -141,18 +165,51 @@ async function handleCoinbaseWebhook(request: Request, env: Env): Promise<Respon
       });
     }
 
-    // Query which rooms track this wallet
-    // This is a simplified implementation - in production, you'd maintain an index in KV
-    // For now, we'll need the frontend to call the Worker with the room code explicitly
-    // or maintain a reverse index: wallet -> [roomCodes] in KV
+    // Import wallet index functions
+    const { getRoomsForWallet } = await import('./wallet-index');
 
-    // TODO: Implement proper room index lookup
-    // For MVP, rooms will be notified via direct RPC calls when wallet is added
+    // Find all rooms tracking this wallet
+    const roomCodes = await getRoomsForWallet(env.ROOM_INDEX, walletAddress);
+
+    if (roomCodes.length === 0) {
+      return new Response(JSON.stringify({
+        status: 'ignored',
+        walletAddress,
+        message: 'No rooms tracking this wallet',
+      }), {
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Notify each room about the swap event
+    const notifications = await Promise.all(
+      roomCodes.map(async (roomCode) => {
+        try {
+          const roomId = env.ROOMS.idFromName(roomCode);
+          const roomStub = env.ROOMS.get(roomId);
+
+          // Send swap event to room via RPC
+          const notifyRequest = new Request('https://internal/rpc/notify-swap', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ event, walletAddress }),
+          });
+
+          await roomStub.fetch(notifyRequest as never);
+          return { roomCode, status: 'notified' };
+        } catch (error) {
+          console.error(`Failed to notify room ${roomCode}:`, error);
+          return { roomCode, status: 'failed', error };
+        }
+      })
+    );
 
     return new Response(JSON.stringify({
-      status: 'received',
+      status: 'processed',
       walletAddress,
-      message: 'Webhook processed',
+      roomsNotified: notifications.filter(n => n.status === 'notified').length,
+      totalRooms: roomCodes.length,
+      details: notifications,
     }), {
       headers: { 'Content-Type': 'application/json' },
     });

@@ -11,7 +11,7 @@ const mockEnv: Env = {
   ROOMS: {
     idFromName: jest.fn((name: string) => ({ toString: () => `room-${name}` })),
     get: jest.fn(() => ({
-      fetch: jest.fn().mockResolvedValue(new Response(JSON.stringify({ success: true }))),
+      fetch: jest.fn(() => Promise.resolve(new Response(JSON.stringify({ success: true })))),
     })),
   } as any,
   ROOM_INDEX: {} as any,

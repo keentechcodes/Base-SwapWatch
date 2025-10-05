@@ -18,6 +18,7 @@ new_sqlite_classes = ["RoomDurableObject"]
 # Environment configuration - Staging
 [env.staging]
 vars = { ENVIRONMENT = "staging" }
+route = { pattern = "staging-api.swapwatch.app/*", zone_name = "swapwatch.app" }
 
 [[env.staging.durable_objects.bindings]]
 name = "ROOMS"
@@ -27,12 +28,10 @@ class_name = "RoomDurableObject"
 binding = "ROOM_INDEX"
 id = "41030dc60b6041d4926aa592336b4522"
 
-# Staging route (using workers.dev subdomain for now)
-# route = { pattern = "staging-api.swapwatch.app/*", zone_name = "swapwatch.app" }
-
 # Environment configuration - Production
 [env.production]
 vars = { ENVIRONMENT = "production" }
+route = { pattern = "api.swapwatch.app/*", zone_name = "swapwatch.app" }
 
 [[env.production.durable_objects.bindings]]
 name = "ROOMS"
@@ -41,9 +40,6 @@ class_name = "RoomDurableObject"
 [[env.production.kv_namespaces]]
 binding = "ROOM_INDEX"
 id = "bb200532d7c04a3fa9110a9fb2d7d294"
-
-# Production route
-# route = { pattern = "api.swapwatch.app/*", zone_name = "swapwatch.app" }
 
 # Build configuration
 # No custom build needed - TypeScript is handled by wrangler automatically
