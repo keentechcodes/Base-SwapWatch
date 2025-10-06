@@ -1,0 +1,48 @@
+# Cloudflare Pages configuration for Next.js deployment
+name = "swapwatch"
+compatibility_date = "2024-09-27"
+pages_build_output_dir = ".vercel/output/static"
+
+# Environment variables for production
+[env.production.vars]
+NEXT_PUBLIC_API_URL = "https://api.swapwatch.app"
+NEXT_PUBLIC_WS_URL = "wss://api.swapwatch.app"
+NEXT_PUBLIC_APP_NAME = "SwapWatch"
+
+# Environment variables for staging/preview
+[env.preview.vars]
+NEXT_PUBLIC_API_URL = "https://staging-api.swapwatch.app"
+NEXT_PUBLIC_WS_URL = "wss://staging-api.swapwatch.app"
+NEXT_PUBLIC_APP_NAME = "SwapWatch (Preview)"
+
+# Build configuration
+[build]
+command = "npm run build:pages"
+
+# Build environment variables
+[build.environment]
+NODE_VERSION = "20"
+
+# Custom headers for the Pages deployment
+[[headers]]
+for = "/*"
+  [headers.values]
+  X-Frame-Options = "DENY"
+  X-Content-Type-Options = "nosniff"
+  Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Asset caching rules
+[[headers]]
+for = "/_next/static/*"
+  [headers.values]
+  Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+for = "/fonts/*"
+  [headers.values]
+  Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+for = "/images/*"
+  [headers.values]
+  Cache-Control = "public, max-age=86400"

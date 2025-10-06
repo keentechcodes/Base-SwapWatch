@@ -1,0 +1,10 @@
+{
+  "build_command": "pnpm build:pages",
+  "build_output_directory": ".vercel/output/static",
+  "node_version": "20",
+  "environment_variables": {
+    "NEXT_PUBLIC_API_URL": "https://api.swapwatch.app",
+    "NEXT_PUBLIC_WS_URL": "wss://api.swapwatch.app",
+    "NEXT_PUBLIC_APP_NAME": "SwapWatch"
+  }
+}

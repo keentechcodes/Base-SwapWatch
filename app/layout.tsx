@@ -4,6 +4,9 @@ import VisualEditsMessenger from "../visual-edits/VisualEditsMessenger";
 import ErrorReporter from "@/components/ErrorReporter";
 import Script from "next/script";
 
+// Configure for Cloudflare Pages edge runtime
+export const runtime = 'edge';
+
 export const metadata: Metadata = {
   title: "SwapWatch — Terminal Wallet Rooms",
   description: "Create or join a room to monitor Base Chain wallet swaps in a terminal-inspired UI.",

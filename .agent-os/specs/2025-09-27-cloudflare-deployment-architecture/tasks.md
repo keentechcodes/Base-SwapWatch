@@ -37,15 +37,15 @@ These are the tasks to be completed for the spec detailed in @.agent-os/specs/20
   - [x] 3.7 Set up custom routes for api.swapwatch.app subdomain
   - [x] 3.8 Verify webhook processing and API endpoints work in production
 
-- [ ] 4. Migrate and deploy frontend to Cloudflare Pages
-  - [ ] 4.1 Write tests for edge runtime compatibility
-  - [ ] 4.2 Move UI folder contents to main application structure
-  - [ ] 4.3 Add @cloudflare/next-on-pages adapter and configure build
-  - [ ] 4.4 Update all server components with export const runtime = "edge"
-  - [ ] 4.5 Replace environment variables to use Cloudflare bindings
-  - [ ] 4.6 Configure Pages build settings and Node 20 in .nvmrc
-  - [ ] 4.7 Deploy to Cloudflare Pages and verify build success
-  - [ ] 4.8 Verify frontend loads and connects to Worker API
+- [x] 4. Migrate and deploy frontend to Cloudflare Pages
+  - [x] 4.1 Write tests for edge runtime compatibility
+  - [x] 4.2 Move UI folder contents to main application structure
+  - [x] 4.3 Add @cloudflare/next-on-pages adapter and configure build
+  - [x] 4.4 Update all server components with export const runtime = "edge"
+  - [x] 4.5 Replace environment variables to use Cloudflare bindings
+  - [x] 4.6 Configure Pages build settings and Node 20 in .nvmrc
+  - [x] 4.7 Deploy to Cloudflare Pages and verify build success
+  - [x] 4.8 Verify frontend loads and connects to Worker API
 
 - [ ] 5. Integrate WebSocket connections and real-time updates
   - [ ] 5.1 Write tests for WebSocket client reconnection and message handling
