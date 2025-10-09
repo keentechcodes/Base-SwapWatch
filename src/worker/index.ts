@@ -106,41 +106,47 @@ export default {
           });
         }
 
-        // POST /rooms/{code}/wallets - Add wallet
+        // POST /rooms/{code}/wallets - Add wallet (with indexing)
         const walletsPostMatch = path.match(/^\/rooms\/([a-zA-Z0-9-]+)\/wallets$/);
         if (walletsPostMatch && method === 'POST') {
           const roomCode = walletsPostMatch[1];
           const body = await request.json() as any;
+          const walletAddress = body.wallet || body.address;
 
-          const roomId = env.ROOMS.idFromName(roomCode);
-          const roomStub = env.ROOMS.get(roomId);
+          // Import room API handlers
+          const { handleAddWallet } = await import('./room-api');
 
-          const addRequest = new Request('https://internal/wallets', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              address: body.wallet || body.address,
-              label: body.label
-            }),
-          });
+          // Use handleAddWallet which manages indexing and CDP webhook updates
+          const response = await handleAddWallet(env, roomCode, walletAddress);
 
-          const response = await roomStub.fetch(addRequest as never);
-          return addCorsHeaders(response as unknown as Response, corsHeaders);
+          // If successful and label provided, update the label
+          if (response.ok && body.label) {
+            const roomId = env.ROOMS.idFromName(roomCode);
+            const roomStub = env.ROOMS.get(roomId);
+
+            const updateRequest = new Request(`https://internal/wallets/${walletAddress}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ label: body.label }),
+            });
+
+            await roomStub.fetch(updateRequest as never);
+          }
+
+          return addCorsHeaders(response, corsHeaders);
         }
 
-        // DELETE /rooms/{code}/wallets/{wallet} - Remove wallet
+        // DELETE /rooms/{code}/wallets/{wallet} - Remove wallet (with indexing)
         const deleteMatch = path.match(/^\/rooms\/([a-zA-Z0-9-]+)\/wallets\/([^/]+)$/);
         if (deleteMatch && method === 'DELETE') {
           const [, roomCode, walletAddress] = deleteMatch;
-          const roomId = env.ROOMS.idFromName(roomCode);
-          const roomStub = env.ROOMS.get(roomId);
 
-          const deleteRequest = new Request(`https://internal/wallets/${walletAddress}`, {
-            method: 'DELETE',
-          });
+          // Import room API handlers
+          const { handleRemoveWallet } = await import('./room-api');
 
-          const response = await roomStub.fetch(deleteRequest as never);
-          return addCorsHeaders(response as unknown as Response, corsHeaders);
+          // Use handleRemoveWallet which manages indexing and CDP webhook updates
+          const response = await handleRemoveWallet(env, roomCode, walletAddress);
+          return addCorsHeaders(response, corsHeaders);
         }
 
         // If no /rooms route matched, fall through to /room handler
@@ -191,6 +197,11 @@ export default {
         }
 
         return addCorsHeaders(response as unknown as Response, corsHeaders);
+      }
+
+      // Test endpoint to simulate swap events (for testing before CDP is configured)
+      if (path === '/test/swap' && request.method === 'POST') {
+        return await handleTestSwap(request, env, corsHeaders);
       }
 
       // Webhook endpoint (Coinbase CDP)
@@ -376,6 +387,93 @@ function extractWalletAddress(event: any): string | null {
   if (event.addresses && event.addresses.length > 0) return event.addresses[0];
 
   return null;
+}
+
+/**
+ * Test endpoint to simulate swap events
+ * Usage: POST /test/swap with body: { walletAddress, amountInUsd, tokenIn, tokenOut, ... }
+ */
+async function handleTestSwap(request: Request, env: Env, corsHeaders: Record<string, string>): Promise<Response> {
+  try {
+    const body = await request.json() as any;
+    const walletAddress = body.walletAddress;
+
+    if (!walletAddress) {
+      return new Response(JSON.stringify({ error: 'Missing walletAddress' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
+
+    // Import wallet index functions
+    const { getRoomsForWallet } = await import('./wallet-index');
+
+    // Find all rooms tracking this wallet
+    const roomCodes = await getRoomsForWallet(env.ROOM_INDEX, walletAddress);
+
+    if (roomCodes.length === 0) {
+      return new Response(JSON.stringify({
+        status: 'ignored',
+        walletAddress,
+        message: 'No rooms tracking this wallet. Add the wallet to a room first.',
+      }), {
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
+    }
+
+    // Create mock swap event with provided data or defaults
+    const swapEvent = {
+      walletAddress: walletAddress.toLowerCase(),
+      amountInUsd: body.amountInUsd || 1000,
+      tokenIn: body.tokenIn || { symbol: 'USDC', amount: '1000' },
+      tokenOut: body.tokenOut || { symbol: 'WETH', amount: '0.5' },
+      type: body.type || 'buy',
+      timestamp: Date.now(),
+      txHash: body.txHash || '0x' + Math.random().toString(16).slice(2),
+    };
+
+    // Notify each room about the swap event
+    const notifications = await Promise.all(
+      roomCodes.map(async (roomCode) => {
+        try {
+          const roomId = env.ROOMS.idFromName(roomCode);
+          const roomStub = env.ROOMS.get(roomId);
+
+          // Send swap event to room via RPC
+          const notifyRequest = new Request('https://internal/rpc/notify-swap', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(swapEvent),
+          });
+
+          const response = await roomStub.fetch(notifyRequest as never);
+          const result = await response.json();
+
+          return { roomCode, status: 'notified', result };
+        } catch (error) {
+          console.error(`Failed to notify room ${roomCode}:`, error);
+          return { roomCode, status: 'failed', error: (error as Error).message };
+        }
+      })
+    );
+
+    return new Response(JSON.stringify({
+      status: 'processed',
+      walletAddress,
+      swapEvent,
+      roomsNotified: notifications.filter(n => n.status === 'notified').length,
+      totalRooms: roomCodes.length,
+      details: notifications,
+    }), {
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    });
+  } catch (error) {
+    console.error('Test swap error:', error);
+    return new Response(JSON.stringify({ error: 'Test swap processing failed' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...corsHeaders },
+    });
+  }
 }
 
 // Export Durable Object class
