@@ -156,7 +156,7 @@
     "ts-jest": "^29.4.1",
     "ts-node": "^10.9.2",
     "typescript": "^5",
-    "vercel": "^48.1.6",
+    "vercel": "^47.0.4",
     "vitest": "^3.2.4",
     "wrangler": "^4.40.2",
     "@eslint/eslintrc": "^3.3.1",
