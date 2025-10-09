@@ -2,10 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   // Required for @cloudflare/next-on-pages
-  experimental: {
-    // Enable edge runtime for app directory
-    runtime: 'edge',
-  },
+  // Note: Edge runtime is configured per-route via `export const runtime = 'edge'`
 
   // Image optimization configuration for Cloudflare
   images: {
