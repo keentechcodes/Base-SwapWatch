@@ -24,9 +24,12 @@ import type {
  * Delegates all logic to functional modules
  */
 export class RoomDurableObject {
+  private state: DurableObjectState;
   private handlers: ReturnType<typeof createRequestHandlers>;
 
   constructor(state: DurableObjectState, _env: Env) {
+    this.state = state;
+
     // Initialize functional modules with DI
     const storage = createStorageOps(state.storage);
     const websocket = createWebSocketManager();
@@ -62,6 +65,11 @@ export class RoomDurableObject {
 
       if (path === '/wallets' && method === 'GET') {
         const result = await this.handlers.getWallets();
+        return this.toResponse(result);
+      }
+
+      if (path === '/labels' && method === 'GET') {
+        const result = await this.handlers.getLabels();
         return this.toResponse(result);
       }
 
@@ -134,9 +142,27 @@ export class RoomDurableObject {
       if (typeof message === 'string') {
         const data = JSON.parse(message);
 
-        // Handle ping/pong
+        // Handle ping - respond with pong
         if (data.type === 'ping') {
-          await this.handlers.handleWebSocketConnect(ws);
+          ws.send(JSON.stringify({ type: 'pong' }));
+          return;
+        }
+
+        // Handle get_room_data request
+        if (data.type === 'get_room_data') {
+          const walletsResult = await this.handlers.getWallets();
+          const labelsResult = await this.handlers.getLabels();
+          const presenceResult = this.handlers.getPresence();
+
+          ws.send(JSON.stringify({
+            type: 'room_data',
+            data: {
+              wallets: walletsResult.success ? walletsResult.data.map(w => w.address) : [],
+              labels: labelsResult.success ? labelsResult.data : {},
+              presence: presenceResult.success ? presenceResult.data : { count: 0 }
+            }
+          }));
+          return;
         }
       }
     } catch (error) {
@@ -162,14 +188,25 @@ export class RoomDurableObject {
   // Private helper methods
 
   /**
-   * Handle WebSocket upgrade (platform-specific, kept minimal)
+   * Handle WebSocket upgrade using Cloudflare Durable Object WebSocket API
    */
-  private async handleWebSocketUpgrade(_request: Request): Promise<Response> {
-    // WebSocket handling will work in Cloudflare Workers runtime
-    // For now, return placeholder
-    return new Response('WebSocket upgrade not available in this environment', {
-      status: 101
-    });
+  private async handleWebSocketUpgrade(request: Request): Promise<Response> {
+    // Create a WebSocket pair (client and server)
+    const pair = new WebSocketPair();
+    const [client, server] = Object.values(pair);
+
+    // Accept the server WebSocket and register it with the Durable Object
+    // This enables the webSocketMessage, webSocketClose, and webSocketError handlers
+    this.state.acceptWebSocket(server);
+
+    // Store the WebSocket connection
+    await this.handlers.handleWebSocketConnect(server);
+
+    // Return the client WebSocket to the browser
+    return new Response(null, {
+      status: 101,
+      webSocket: client,
+    } as any);
   }
 
   /**

@@ -33,7 +33,120 @@ export default {
         });
       }
 
-      // Room management endpoints
+      // Handle /rooms (plural) endpoints - frontend uses these
+      if (path.startsWith('/rooms')) {
+        const method = request.method;
+
+        // POST /rooms - Create new room
+        if (path === '/rooms' && method === 'POST') {
+          const body = await request.json() as any;
+          const roomCode = body.code;
+
+          if (!roomCode) {
+            return new Response(JSON.stringify({ error: 'Missing room code' }), {
+              status: 400,
+              headers: { 'Content-Type': 'application/json', ...corsHeaders },
+            });
+          }
+
+          const roomId = env.ROOMS.idFromName(roomCode);
+          const roomStub = env.ROOMS.get(roomId);
+
+          // Create room in Durable Object using correct endpoint
+          const createRequest = new Request('https://internal/room/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              code: roomCode,
+              createdBy: body.createdBy || 'anonymous',
+              config: body.config || {}
+            }),
+          });
+
+          const response = await roomStub.fetch(createRequest as never);
+          return addCorsHeaders(response as unknown as Response, corsHeaders);
+        }
+
+        // GET /rooms/{code} - Get room data
+        const roomsMatch = path.match(/^\/rooms\/([a-zA-Z0-9-]+)$/);
+        if (roomsMatch && method === 'GET') {
+          const roomCode = roomsMatch[1];
+          const roomId = env.ROOMS.idFromName(roomCode);
+          const roomStub = env.ROOMS.get(roomId);
+
+          // Get all room data components including labels
+          const [walletsResp, configResp, presenceResp, labelsResp] = await Promise.all([
+            roomStub.fetch(new Request('https://internal/wallets', { method: 'GET' }) as never),
+            roomStub.fetch(new Request('https://internal/config', { method: 'GET' }) as never),
+            roomStub.fetch(new Request('https://internal/presence', { method: 'GET' }) as never),
+            roomStub.fetch(new Request('https://internal/labels', { method: 'GET' }) as never),
+          ]);
+
+          const walletsData = await walletsResp.json();
+          const config = await configResp.json();
+          const presence = await presenceResp.json();
+          const labels = await labelsResp.json();
+
+          // Extract just wallet addresses from walletsData (array of {address, label?})
+          const walletAddresses = Array.isArray(walletsData)
+            ? walletsData.map(w => typeof w === 'string' ? w : w.address)
+            : [];
+
+          // Combine into room response format
+          const roomData = {
+            code: roomCode,
+            wallets: walletAddresses,
+            labels: labels || {},
+            createdAt: config?.createdAt || new Date().toISOString(),
+            presence: presence || { count: 0 }
+          };
+
+          return new Response(JSON.stringify(roomData), {
+            headers: { 'Content-Type': 'application/json', ...corsHeaders },
+          });
+        }
+
+        // POST /rooms/{code}/wallets - Add wallet
+        const walletsPostMatch = path.match(/^\/rooms\/([a-zA-Z0-9-]+)\/wallets$/);
+        if (walletsPostMatch && method === 'POST') {
+          const roomCode = walletsPostMatch[1];
+          const body = await request.json() as any;
+
+          const roomId = env.ROOMS.idFromName(roomCode);
+          const roomStub = env.ROOMS.get(roomId);
+
+          const addRequest = new Request('https://internal/wallets', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              address: body.wallet || body.address,
+              label: body.label
+            }),
+          });
+
+          const response = await roomStub.fetch(addRequest as never);
+          return addCorsHeaders(response as unknown as Response, corsHeaders);
+        }
+
+        // DELETE /rooms/{code}/wallets/{wallet} - Remove wallet
+        const deleteMatch = path.match(/^\/rooms\/([a-zA-Z0-9-]+)\/wallets\/([^/]+)$/);
+        if (deleteMatch && method === 'DELETE') {
+          const [, roomCode, walletAddress] = deleteMatch;
+          const roomId = env.ROOMS.idFromName(roomCode);
+          const roomStub = env.ROOMS.get(roomId);
+
+          const deleteRequest = new Request(`https://internal/wallets/${walletAddress}`, {
+            method: 'DELETE',
+          });
+
+          const response = await roomStub.fetch(deleteRequest as never);
+          return addCorsHeaders(response as unknown as Response, corsHeaders);
+        }
+
+        // If no /rooms route matched, fall through to /room handler
+      }
+
+      // Room management endpoints (legacy /room/ singular routes)
       if (path.startsWith('/room/')) {
         const roomCode = extractRoomCode(path);
         const method = request.method;
@@ -71,19 +184,18 @@ export default {
         const roomId = env.ROOMS.idFromName(roomCode);
         const roomStub = env.ROOMS.get(roomId);
         const response = await roomStub.fetch(request as never);
+
+        // Don't modify WebSocket upgrade responses - return as-is
+        if (response.status === 101) {
+          return response;
+        }
+
         return addCorsHeaders(response as unknown as Response, corsHeaders);
       }
 
       // Webhook endpoint (Coinbase CDP)
       if (path === '/webhook/coinbase' && request.method === 'POST') {
         return await handleCoinbaseWebhook(request, env);
-      }
-
-      // List active rooms (for debugging - remove in production)
-      if (path === '/rooms' && request.method === 'GET') {
-        return new Response(JSON.stringify({ message: 'Room listing not implemented' }), {
-          headers: { 'Content-Type': 'application/json', ...corsHeaders },
-        });
       }
 
       return new Response('Not Found', {

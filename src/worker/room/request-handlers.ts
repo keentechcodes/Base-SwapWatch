@@ -147,7 +147,8 @@ export const createRequestHandlers = (deps: HandlerDependencies) => {
       // Broadcast to WebSocket clients
       await websocket.broadcast({
         type: 'wallet_added',
-        data: { address, label }
+        wallet: address,
+        label
       });
 
       return success(undefined);
@@ -183,7 +184,7 @@ export const createRequestHandlers = (deps: HandlerDependencies) => {
       // Broadcast to WebSocket clients
       await websocket.broadcast({
         type: 'wallet_removed',
-        data: { address: validAddress }
+        wallet: validAddress
       });
 
       return success(undefined);
@@ -241,6 +242,13 @@ export const createRequestHandlers = (deps: HandlerDependencies) => {
       }));
 
       return success(result);
+    },
+
+    /**
+     * Get wallet labels
+     */
+    getLabels: async (): Promise<Result<Record<string, string>>> => {
+      return await storage.getLabels();
     },
 
     /**
