@@ -487,7 +487,10 @@ export default function RoomPage() {
                   <div className="flex items-center gap-1">
                     {/* Simple inline rename: click to set current label input */}
                     <button
-                      onClick={() => setWalletLabelInput(labels[w] || "") || setWalletInput(w)}
+                      onClick={() => {
+                        setWalletLabelInput(labels[w] || "");
+                        setWalletInput(w);
+                      }}
                       className="text-[10px] rounded-sm border border-[var(--border)] px-2 py-0.5 hover:border-[var(--primary)] hover:text-[var(--primary-foreground)]"
                     >
                       rename

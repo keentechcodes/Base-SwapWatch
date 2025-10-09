@@ -50,9 +50,10 @@ $$  /   \$$ |\$$$$$$$ | \$$$$  |\$$$$$$$\ $$ |  $$ |
   const asciiCombined = useMemo(() => `${asciiTop}\n${asciiBottom}`, [asciiTop, asciiBottom]);
 
   // Compute the widest line to size the block precisely in ch units
-  const topCols = useMemo(() => asciiTop.split("\n").reduce((m, l) => Math.max(m, l.length), 0), [asciiTop]);
-  const bottomCols = useMemo(() => asciiBottom.split("\n").reduce((m, l) => Math.max(m, l.length), 0), [asciiBottom]);
-  const maxCols = useMemo(() => Math.max(topCols, bottomCols), [topCols, bottomCols]);
+  // Note: Column calculations available but using fixed responsive sizing for better mobile UX
+  // const topCols = useMemo(() => asciiTop.split("\n").reduce((m, l) => Math.max(m, l.length), 0), [asciiTop]);
+  // const bottomCols = useMemo(() => asciiBottom.split("\n").reduce((m, l) => Math.max(m, l.length), 0), [asciiBottom]);
+  // const maxCols = useMemo(() => Math.max(topCols, bottomCols), [topCols, bottomCols]);
 
   // Measure container to derive pixel-perfect font-size per column (desktop-first, minimal mobile)
   const [containerW, setContainerW] = useState(0);
@@ -83,11 +84,7 @@ $$  /   \$$ |\$$$$$$$ | \$$$$  |\$$$$$$$\ $$ |  $$ |
   }, []);
 
   // Derive font-size: cap between 9px and 18px; width per column from inner content width
-  const fontPx = useMemo(() => {
-    if (maxCols <= 0) return 12;
-    const px = containerW / maxCols;
-    return Math.max(9, Math.min(18, px));
-  }, [containerW, maxCols]);
+  // Note: fontPx calculation available but using displayFontPx for better mobile responsiveness
   const displayFontPx = useMemo(() => {
     // Slightly smaller on narrow mobile widths to prevent side clipping
     if (containerW === 0) return 16;
