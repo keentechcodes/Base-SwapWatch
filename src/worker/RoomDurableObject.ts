@@ -8,6 +8,7 @@ import type { DurableObjectState } from '@cloudflare/workers-types';
 import type { Env } from './types';
 import { createStorageOps } from './room/storage-ops';
 import { createWebSocketManager } from './room/websocket-manager';
+import { createSwapStorage } from './room/swap-storage';
 import { createRequestHandlers } from './room/request-handlers';
 import type {
   AddWalletRequest,
@@ -33,7 +34,8 @@ export class RoomDurableObject {
     // Initialize functional modules with DI
     const storage = createStorageOps(state.storage);
     const websocket = createWebSocketManager(state);
-    this.handlers = createRequestHandlers({ storage, websocket });
+    const swapStorage = createSwapStorage(state.storage);
+    this.handlers = createRequestHandlers({ storage, websocket, swapStorage });
   }
 
   /**
@@ -105,6 +107,11 @@ export class RoomDurableObject {
 
       if (path === '/presence' && method === 'GET') {
         const result = this.handlers.getPresence();
+        return this.toResponse(result);
+      }
+
+      if (path === '/swaps' && method === 'GET') {
+        const result = await this.handlers.getSwapHistory();
         return this.toResponse(result);
       }
 

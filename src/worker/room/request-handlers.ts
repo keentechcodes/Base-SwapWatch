@@ -7,6 +7,7 @@ import { Result, success, failure } from '../../services/types';
 import type { StorageOps } from './storage-ops';
 import type { WebSocketManager } from './websocket-manager';
 import { broadcastPresence } from './websocket-manager';
+import type { SwapStorage, StoredSwap } from './swap-storage';
 import {
   validateWalletAddress,
   validateWalletLabel,
@@ -38,13 +39,14 @@ import { VALIDATION, TIME } from '../types';
 export interface HandlerDependencies {
   storage: StorageOps;
   websocket: WebSocketManager;
+  swapStorage: SwapStorage;
 }
 
 /**
  * Create request handlers with injected dependencies
  */
 export const createRequestHandlers = (deps: HandlerDependencies) => {
-  const { storage, websocket } = deps;
+  const { storage, websocket, swapStorage } = deps;
 
   return {
     /**
@@ -323,6 +325,19 @@ export const createRequestHandlers = (deps: HandlerDependencies) => {
      * RPC: Notify swap event
      */
     notifySwap: async (request: NotifySwapRequest): Promise<Result<NotifySwapResponse>> => {
+      // Persist swap to storage with 3-day TTL
+      await swapStorage.storeSwap({
+        id: request.id || request.tx,
+        ts: request.ts || Date.now(),
+        from: request.from,
+        to: request.to,
+        amountIn: request.amountIn,
+        amountOut: request.amountOut,
+        wallet: request.wallet.toLowerCase(),
+        tx: request.tx,
+        usdValue: request.usdValue
+      });
+
       // Broadcast to WebSocket clients
       const broadcastResult = await websocket.broadcast({
         type: 'swap',
@@ -362,11 +377,24 @@ export const createRequestHandlers = (deps: HandlerDependencies) => {
     },
 
     /**
+     * Get swap history for this room
+     */
+    getSwapHistory: async (options?: {
+      since?: number;
+      limit?: number;
+    }): Promise<Result<StoredSwap[]>> => {
+      return await swapStorage.getSwaps(options);
+    },
+
+    /**
      * Handle room cleanup (alarm fired)
      */
     cleanup: async (): Promise<Result<void>> => {
       // Close all WebSocket connections
       websocket.closeAll(1000, 'Room expired');
+
+      // Cleanup expired swaps (3-day TTL)
+      await swapStorage.cleanupExpiredSwaps();
 
       // Delete all storage
       const deleteResult = await storage.deleteAll();

@@ -67,6 +67,21 @@ export default {
           return addCorsHeaders(response as unknown as Response, corsHeaders);
         }
 
+        // GET /rooms/{code}/swaps - Get swap history
+        const swapsMatch = path.match(/^\/rooms\/([a-zA-Z0-9-]+)\/swaps$/);
+        if (swapsMatch && method === 'GET') {
+          const roomCode = swapsMatch[1];
+          const roomId = env.ROOMS.idFromName(roomCode);
+          const roomStub = env.ROOMS.get(roomId);
+
+          const swapsResp = await roomStub.fetch(new Request('https://internal/swaps', { method: 'GET' }) as never);
+          const swaps = await swapsResp.json();
+
+          return new Response(JSON.stringify(swaps), {
+            headers: { 'Content-Type': 'application/json', ...corsHeaders },
+          });
+        }
+
         // GET /rooms/{code} - Get room data
         const roomsMatch = path.match(/^\/rooms\/([a-zA-Z0-9-]+)$/);
         if (roomsMatch && method === 'GET') {

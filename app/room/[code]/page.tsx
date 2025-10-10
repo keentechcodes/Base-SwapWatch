@@ -156,7 +156,17 @@ export default function RoomPage() {
 
   // Handle received swap
   const handleSwapReceived = useCallback((swap: Swap) => {
-    setSwaps(prev => [swap, ...prev].slice(0, 200)); // Keep last 200 swaps
+    setSwaps(prev => {
+      // Check for duplicate swap (by tx hash or id)
+      const isDuplicate = prev.some(s => s.tx === swap.tx || s.id === swap.id);
+      if (isDuplicate) {
+        console.log('[Room] Duplicate swap received, skipping:', swap.tx);
+        return prev;
+      }
+
+      // Add new swap to the beginning, keep last 200
+      return [swap, ...prev].slice(0, 200);
+    });
 
     setStats(prev => ({
       swaps: prev.swaps + 1,
@@ -186,6 +196,29 @@ export default function RoomPage() {
 
         const data = await response.json();
         setRoomData(data);
+
+        // Load swap history
+        try {
+          const swapsResponse = await fetch(`${API_URL}/rooms/${room}/swaps`);
+          if (swapsResponse.ok) {
+            const swapsData = await swapsResponse.json();
+            if (Array.isArray(swapsData) && swapsData.length > 0) {
+              console.log('[Room] Loaded', swapsData.length, 'historical swaps');
+              setSwaps(swapsData);
+
+              // Calculate initial stats from historical data
+              const totalVolume = swapsData.reduce((sum, swap) => sum + (swap.usdValue || 0), 0);
+              setStats(prev => ({
+                ...prev,
+                swaps: swapsData.length,
+                volume: totalVolume
+              }));
+            }
+          }
+        } catch (error) {
+          console.warn('[Room] Could not load swap history:', error);
+          // Non-critical error, continue without historical swaps
+        }
       } catch (error) {
         console.error('[Room] Error loading room:', error);
       } finally {
