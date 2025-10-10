@@ -32,7 +32,7 @@ export class RoomDurableObject {
 
     // Initialize functional modules with DI
     const storage = createStorageOps(state.storage);
-    const websocket = createWebSocketManager();
+    const websocket = createWebSocketManager(state);
     this.handlers = createRequestHandlers({ storage, websocket });
   }
 

@@ -1,66 +1,56 @@
 /**
- * WebSocket manager factory with encapsulated session state
- * Following functional closure pattern for state management
+ * WebSocket manager factory for Cloudflare Durable Objects
+ * Uses Durable Object's state.getWebSockets() instead of manual tracking
  */
 
+import type { DurableObjectState } from '@cloudflare/workers-types';
 import { Result, success, failure } from '../../services/types';
 import type { WebSocketMessage } from '../types';
 
 /**
- * WebSocket manager factory
- * Manages WebSocket sessions with private state in closure
+ * WebSocket manager factory for Durable Objects
+ * Takes DurableObjectState to access managed WebSockets
  */
-export const createWebSocketManager = () => {
-  // Private state - encapsulated in closure
-  const sessions = new Set<WebSocket>();
-
+export const createWebSocketManager = (state: DurableObjectState) => {
   return {
     /**
      * Track a new WebSocket connection
+     * In Durable Objects, this is handled by state.acceptWebSocket()
      */
     track: (ws: WebSocket): Result<void> => {
-      try {
-        sessions.add(ws);
-        return success(undefined);
-      } catch (error) {
-        return failure(new Error('Failed to track WebSocket'));
-      }
+      // WebSocket is already accepted in handleWebSocketUpgrade
+      // This is now a no-op but kept for API compatibility
+      return success(undefined);
     },
 
     /**
      * Untrack a WebSocket connection
+     * In Durable Objects, connections are auto-removed on close
      */
     untrack: (ws: WebSocket): Result<void> => {
-      try {
-        sessions.delete(ws);
-        return success(undefined);
-      } catch (error) {
-        return failure(new Error('Failed to untrack WebSocket'));
-      }
+      // Auto-handled by Durable Objects runtime
+      // This is now a no-op but kept for API compatibility
+      return success(undefined);
     },
 
     /**
      * Broadcast message to all connected sessions
+     * Uses state.getWebSockets() to get Durable Object managed connections
      */
     broadcast: async (message: WebSocketMessage): Promise<Result<number>> => {
       try {
         const payload = JSON.stringify(message);
+        const connections = state.getWebSockets();
         let delivered = 0;
-        const failed: WebSocket[] = [];
 
-        for (const ws of sessions) {
+        for (const ws of connections) {
           try {
             ws.send(payload);
             delivered++;
           } catch (error) {
-            // Mark for removal if send fails
-            failed.push(ws);
+            // Connection will be auto-removed by Durable Objects runtime
+            console.error('Failed to send to WebSocket:', error);
           }
-        }
-
-        // Clean up failed connections
-        for (const ws of failed) {
-          sessions.delete(ws);
         }
 
         return success(delivered);
@@ -78,17 +68,16 @@ export const createWebSocketManager = () => {
         ws.send(payload);
         return success(undefined);
       } catch (error) {
-        // Remove failed connection
-        sessions.delete(ws);
         return failure(new Error('Failed to send message'));
       }
     },
 
     /**
      * Get current connection count
+     * Uses state.getWebSockets() to get accurate count
      */
     getCount: (): number => {
-      return sessions.size;
+      return state.getWebSockets().length;
     },
 
     /**
@@ -96,9 +85,10 @@ export const createWebSocketManager = () => {
      */
     closeAll: (code?: number, reason?: string): Result<number> => {
       try {
+        const connections = state.getWebSockets();
         let closed = 0;
 
-        for (const ws of sessions) {
+        for (const ws of connections) {
           try {
             ws.close(code || 1000, reason || 'Room closing');
             closed++;
@@ -107,7 +97,6 @@ export const createWebSocketManager = () => {
           }
         }
 
-        sessions.clear();
         return success(closed);
       } catch (error) {
         return failure(new Error('Failed to close connections'));
@@ -118,7 +107,8 @@ export const createWebSocketManager = () => {
      * Check if a WebSocket is tracked
      */
     isTracked: (ws: WebSocket): boolean => {
-      return sessions.has(ws);
+      const connections = state.getWebSockets();
+      return connections.includes(ws);
     }
   };
 };
