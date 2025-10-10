@@ -421,15 +421,19 @@ async function handleTestSwap(request: Request, env: Env, corsHeaders: Record<st
       });
     }
 
-    // Create mock swap event with provided data or defaults
+    // Create swap event in format expected by frontend
+    const tokenIn = body.tokenIn || { symbol: 'USDC', amount: '1000' };
+    const tokenOut = body.tokenOut || { symbol: 'WETH', amount: '0.5' };
     const swapEvent = {
-      walletAddress: walletAddress.toLowerCase(),
-      amountInUsd: body.amountInUsd || 1000,
-      tokenIn: body.tokenIn || { symbol: 'USDC', amount: '1000' },
-      tokenOut: body.tokenOut || { symbol: 'WETH', amount: '0.5' },
-      type: body.type || 'buy',
-      timestamp: Date.now(),
-      txHash: body.txHash || '0x' + Math.random().toString(16).slice(2),
+      id: body.txHash || '0x' + Math.random().toString(16).slice(2),
+      ts: Date.now(),
+      from: tokenIn.symbol,
+      to: tokenOut.symbol,
+      amountIn: parseFloat(tokenIn.amount),
+      amountOut: parseFloat(tokenOut.amount),
+      wallet: walletAddress.toLowerCase(),
+      tx: body.txHash || '0x' + Math.random().toString(16).slice(2),
+      usdValue: body.amountInUsd || 1000,
     };
 
     // Notify each room about the swap event
