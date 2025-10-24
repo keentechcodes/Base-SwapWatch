@@ -8,6 +8,8 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useWebSocket } from "@/hooks/useWebSocket";
+
+export const runtime = 'edge';
 import { WS_URL, API_URL } from "@/lib/config";
 import {
   Dialog,

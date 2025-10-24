@@ -1,6 +1,5 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   // Required for @cloudflare/next-on-pages
   // Note: Edge runtime is configured per-route via `export const runtime = 'edge'`
 
@@ -28,6 +27,10 @@ const nextConfig: NextConfig = {
 
   // Output configuration for Cloudflare Pages
   output: 'standalone',
+
+  // Skip generating error pages during export
+  skipTrailingSlashRedirect: true,
+  skipMiddlewareUrlNormalize: true,
 
   // Webpack configuration for edge compatibility
   webpack: (config, { isServer }) => {
