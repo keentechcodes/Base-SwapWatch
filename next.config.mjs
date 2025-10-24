@@ -48,4 +48,4 @@ const nextConfig = {
 };
 
 export default nextConfig;
-// Deployment trigger: 1758476000000
+// Deployment with adapter: 1758476500000
