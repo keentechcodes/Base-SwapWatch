@@ -111,7 +111,7 @@ $$  /   \$$ |\$$$$$$$ | \$$$$  |\$$$$$$$\ $$ |  $$ |
   };
 
   useEffect(() => {
-    document.title = "SwapWatch — Create or Join a Room";
+    document.title = "SwapWatch — The Watch Party for Base Trading";
   }, []);
 
   return (
@@ -141,13 +141,20 @@ $$  /   \$$ |\$$$$$$$ | \$$$$  |\$$$$$$$\ $$ |  $$ |
                 </pre>
               </div>
             </div>
-            <div className="mt-2 flex items-center justify-center gap-2">
-              <p className="text-[10px] xs:text-[11px] sm:text-xs text-[var(--muted-foreground)] !whitespace-pre-wrap !whitespace-pre-line !whitespace-pre-line !whitespace-pre-line">{`Share the room code with friends to watch wallets and swaps together.`}
-                <wbr />
+            <div className="mt-3 flex flex-col items-center justify-center gap-1.5">
+              <p className="text-xs sm:text-sm text-[var(--foreground)] font-medium text-center">
+                The watch party for{" "}
+                <span className="font-bold text-[#0052FF] drop-shadow-[0_0_8px_rgba(0,82,255,0.5)]">
+                  Base
+                </span>{" "}
+                trading. Build your watchlist, share the room, catch every move.
+              </p>
+              <p className="text-[10px] xs:text-[11px] sm:text-xs text-[var(--muted-foreground)] text-center">
+                Create themed rooms: whale wallets, degen traders, or your favorite protocols.
               </p>
             </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-              <label className="w-full">
+            <div className="mt-6 flex flex-col sm:flex-row gap-3 items-stretch sm:items-end max-w-2xl mx-auto">
+              <label className="flex-1 min-w-0">
                 <span className="block text-xs text-[var(--muted-foreground)] mb-2">Enter room code</span>
                 <input
                   value={joinCode}
@@ -157,7 +164,7 @@ $$  /   \$$ |\$$$$$$$ | \$$$$  |\$$$$$$$\ $$ |  $$ |
                   className="w-full rounded-md border border-[var(--border)] bg-[var(--background)] px-3 py-2 text-[var(--foreground)] caret-[var(--primary)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/60 focus:border-[var(--primary)]/60 placeholder:text-[var(--muted-foreground)]/70" />
 
               </label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 sm:flex-shrink-0">
                 <button
                   onClick={onJoin}
                   className="inline-flex items-center justify-center rounded-md border border-[var(--border)] bg-[var(--secondary)] px-4 py-2 text-sm text-[var(--secondary-foreground)] hover:bg-[var(--primary)]/10 hover:border-[var(--primary)]/50 transition-colors">

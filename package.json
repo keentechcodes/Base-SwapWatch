@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "concurrently \"npm run dev:worker\" \"npm run dev:pages\"",
     "dev:worker": "wrangler dev src/worker/index.ts",
-    "dev:pages": "next dev --turbopack",
+    "dev:pages": "next dev",
     "start": "node dist/server.js",
     "build": "next build",
     "build:worker": "tsc --noEmit src/worker/index.ts",
