@@ -18,35 +18,21 @@ export default function Home() {
   const [joinCode, setJoinCode] = useState("");
   const [customCode, setCustomCode] = useState("");
 
-  const asciiTop = useMemo(
+  const asciiLogo = useMemo(
     () => String.raw`
- $$$$$$\
-$$  __$$\
-$$ /  \__|
-\$$$$$$\
- \____$$\
-$$\   $$ |
-\$$$$$$  |
- \______/
+ $$$$$$\  $$\      $$\
+$$  __$$\ $$ | $\  $$ |
+$$ /  \__|$$ |$$$\ $$ |
+\$$$$$$\  $$ $$ $$\$$ |
+ \____$$\ $$$$  _$$$$ |
+$$\   $$ |$$$  / \$$$ |
+\$$$$$$  |$$  /   \$$ |
+ \______/ \__/     \__|
 `,
     []
   );
 
-  const asciiBottom = useMemo(
-    () => String.raw`
-$$\      $$\
-$$ | $\  $$ |
-$$ |$$$\ $$ |
-$$ $$ $$\$$ |
-$$$$  _$$$$ |
-$$$  / \$$$ |
-$$  /   \$$ |
-\__/     \__|
-`,
-    []
-  );
-
-  const asciiCombined = useMemo(() => `${asciiTop}\n${asciiBottom}`, [asciiTop, asciiBottom]);
+  const asciiCombined = useMemo(() => asciiLogo, [asciiLogo]);
 
   // Compute the widest line to size the block precisely in ch units
   // Note: Column calculations available but using fixed responsive sizing for better mobile UX
