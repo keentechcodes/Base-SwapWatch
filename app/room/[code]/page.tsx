@@ -8,6 +8,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useWebSocket } from "@/hooks/useWebSocket";
+import { DEMO_ROOM_DATA, DEMO_SWAPS } from "@/lib/demo-data";
 
 export const runtime = 'edge';
 import { WS_URL, API_URL } from "@/lib/config";
@@ -73,8 +74,8 @@ export default function RoomPage() {
   // Presence tracking
   const [viewers, setViewers] = useState(1);
 
-  // WebSocket connection to Worker
-  const wsUrl = room ? `${WS_URL}/room/${room}/ws` : null;
+  // WebSocket connection to Worker (disabled for DEMO room)
+  const wsUrl = (room && room.toUpperCase() !== 'DEMO') ? `${WS_URL}/room/${room}/ws` : null;
 
   const {
     status: wsStatus,
@@ -184,6 +185,25 @@ export default function RoomPage() {
     const loadRoom = async () => {
       try {
         setIsLoadingRoom(true);
+
+        // Check if this is the DEMO room
+        if (room.toUpperCase() === 'DEMO') {
+          console.log('[Room] Loading DEMO room with fake data');
+          setRoomData(DEMO_ROOM_DATA);
+          setSwaps(DEMO_SWAPS);
+
+          // Calculate stats from demo data
+          const totalVolume = DEMO_SWAPS.reduce((sum, swap) => sum + (swap.usdValue || 0), 0);
+          setStats({
+            swaps: DEMO_SWAPS.length,
+            volume: totalVolume,
+            wallets: DEMO_ROOM_DATA.wallets.length
+          });
+
+          setIsLoadingRoom(false);
+          return;
+        }
+
         const response = await fetch(`${API_URL}/rooms/${room}`);
 
         if (!response.ok) {
