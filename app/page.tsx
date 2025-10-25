@@ -142,7 +142,7 @@ $$  /   \$$ |\$$$$$$$ | \$$$$  |\$$$$$$$\ $$ |  $$ |
               </div>
             </div>
             <div className="mt-2 flex items-center justify-center gap-2">
-              <p className="text-[10px] xs:text-[11px] sm:text-xs text-[var(--muted-foreground)] !whitespace-pre-wrap !whitespace-pre-line !whitespace-pre-line !whitespace-pre-line">{`Share the room code with friends to watch wallets and swaps together.\n*Currently Front End Demo* `}
+              <p className="text-[10px] xs:text-[11px] sm:text-xs text-[var(--muted-foreground)] !whitespace-pre-wrap !whitespace-pre-line !whitespace-pre-line !whitespace-pre-line">{`Share the room code with friends to watch wallets and swaps together.`}
                 <wbr />
               </p>
             </div>
@@ -203,7 +203,7 @@ $$  /   \$$ |\$$$$$$$ | \$$$$  |\$$$$$$$\ $$ |  $$ |
             </div>
           </div>
           <div className="p-4 text-xs text-[var(--muted-foreground)]">
-            <p className="!whitespace-pre-line !whitespace-pre-line !text-center !whitespace-pre-line !whitespace-pre-line !whitespace-pre-line">Built on Base with their CDP Webhooks
+            <p className="!whitespace-pre-line !whitespace-pre-line !text-center !whitespace-pre-line !whitespace-pre-line !whitespace-pre-line">Built on Base with CDP Webhooks
 
             </p>
           </div>
